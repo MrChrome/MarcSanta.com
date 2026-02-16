@@ -347,87 +347,162 @@
   <button class="pdf-btn" onclick="exportPDF()">PDF</button>
   <div class="timeline-container">
     <h1>Marc Santa</h1>
-    <div class="timeline">
-      <div class="timeline-item" style="flex-grow: 4;">
-        <div class="timeline-content">
-          <div class="timeline-label">Clio High School</div>
-          <div class="timeline-years">2000 &ndash; 2004</div>
-        </div>
-        <div class="timeline-dot"></div>
-        <div class="timeline-tooltip">&bull; High honors, 3.8 GPA<br>&bull; DJed several events such as Homecoming, Snowcoming, and Halloween Dances</div>
-      </div>
-      <div class="timeline-item" style="flex-grow: 4;">
-        <div class="timeline-content">
-          <div class="timeline-label">Kettering University</div>
-          <div class="timeline-years">2004 &ndash; 2008</div>
-          <div class="timeline-sub">BS &ndash; Computer Science</div>
-        </div>
-        <div class="timeline-dot"></div>
-        <div class="timeline-tooltip">&bull; President of WKUF-LP 94.3FM radio station<br>&bull; Computer Engineering Minor</div>
-      </div>
-      <div class="timeline-item" style="flex-grow: 2;">
-        <div class="timeline-content">
-          <img class="timeline-logo" src="images/frankenmuth.svg" alt="Frankenmuth Insurance">
-          <div class="timeline-years">2008 &ndash; 2010</div>
-          <div class="timeline-sub">Network Analyst</div>
-        </div>
-        <div class="timeline-dot"></div>
-        <div class="timeline-tooltip">&bull; Administrator of several business critical systems such as firewalls, wifi, distribution network<br>&bull; Data center work including rack design, purchasing, equipment installation</div>
-      </div>
-      <div class="timeline-item" style="flex-grow: 3;">
-        <div class="timeline-content">
-          <img class="timeline-logo" src="images/msu.svg" alt="Michigan State University">
-          <div class="timeline-years">2010 &ndash; 2012</div>
-          <div class="timeline-sub">MS &ndash; Computer Science</div>
-        </div>
-        <div class="timeline-dot"></div>
-        <div class="timeline-tooltip">&bull; Computer security research with advisor Dr. Alex X. Liu<br>&bull; Lead teaching assistant for EGR 100 course</div>
-      </div>
-      <div class="timeline-item" style="flex-grow: 8; align-items: flex-start;">
-        <div class="timeline-content" style="left: 0; transform: translateX(-50%);">
-          <img class="timeline-logo" src="images/urbanscience.svg" alt="Urban Science">
-          <div class="timeline-years">2012 &ndash; Today</div>
-          <div class="timeline-sub">Senior Developer<br>Development Manager<br>Senior Development Manager</div>
-        </div>
-        <div class="timeline-dot"></div>
-        <div class="timeline-tooltip">&bull; Manage three development teams with four products, 50+ million dollars annual revenue<br>&bull; Responsible for application architecture, hiring, training<br>&bull; Designed the company's HackerRank interview coding test</div>
-      </div>
-      <div class="timeline-chevrons">
-        <svg width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="2,6 10,12 2,18" opacity="0.4"/>
-          <polyline points="15,6 23,12 15,18" opacity="0.65"/>
-          <polyline points="28,6 36,12 28,18" opacity="1"/>
-        </svg>
-      </div>
-    </div>
+    <div class="timeline" id="timeline"></div>
   </div>
   <script>
-    if ('ontouchstart' in window) {
-      document.querySelectorAll('.timeline-item').forEach(function(item) {
-        item.addEventListener('click', function(e) {
-          var tooltip = this.querySelector('.timeline-tooltip');
-          if (!tooltip) return;
-          var isOpen = tooltip.style.display === 'block';
-          document.querySelectorAll('.timeline-tooltip').forEach(function(t) {
-            t.style.display = '';
-          });
-          if (!isOpen) {
-            tooltip.style.display = 'block';
-          }
-        });
+    var timelineData = [
+      {
+        name: 'Clio High School',
+        years: '2000 \u2013 2004',
+        type: 'education',
+        grow: 4,
+        bullets: [
+          'High honors, 3.8 GPA',
+          'DJed several events such as Homecoming, Snowcoming, and Halloween Dances'
+        ]
+      },
+      {
+        name: 'Kettering University',
+        years: '2004 \u2013 2008',
+        role: 'BS \u2013 Computer Science',
+        type: 'education',
+        grow: 4,
+        bullets: [
+          'President of WKUF-LP 94.3FM radio station',
+          'Computer Engineering Minor'
+        ]
+      },
+      {
+        name: 'Frankenmuth Insurance',
+        logo: 'images/frankenmuth.svg',
+        years: '2008 \u2013 2010',
+        role: 'Network Analyst',
+        type: 'experience',
+        grow: 2,
+        bullets: [
+          'Administrator of several business critical systems such as firewalls, wifi, distribution network',
+          'Data center work including Rack design, purchasing, equipment installation'
+        ]
+      },
+      {
+        name: 'Michigan State University',
+        logo: 'images/msu.svg',
+        years: '2010 \u2013 2012',
+        role: 'MS \u2013 Computer Science',
+        type: 'education',
+        grow: 3,
+        bullets: [
+          'Computer security research with advisor Dr. Alex X. Liu',
+          'Lead teaching assistant for EGR 100 course'
+        ]
+      },
+      {
+        name: 'Urban Science',
+        logo: 'images/urbanscience.svg',
+        years: '2012 \u2013 Today',
+        pdfYears: '2012 \u2013 Present',
+        role: 'Senior Developer\nDevelopment Manager\nSenior Development Manager',
+        pdfRole: 'Senior Development Manager',
+        type: 'experience',
+        grow: 8,
+        last: true,
+        bullets: [
+          'Manage three development teams with four products, 50+ million dollars annual revenue',
+          'Responsible for application architecture, hiring, training',
+          "Designed the company's HackerRank interview coding test"
+        ]
+      }
+    ];
+
+    // Build HTML timeline from data
+    (function buildTimeline() {
+      var timeline = document.getElementById('timeline');
+      timelineData.forEach(function(d) {
+        var item = document.createElement('div');
+        item.className = 'timeline-item';
+        var style = 'flex-grow: ' + d.grow + ';';
+        if (d.last) style += ' align-items: flex-start;';
+        item.setAttribute('style', style);
+
+        var content = document.createElement('div');
+        content.className = 'timeline-content';
+        if (d.last) content.setAttribute('style', 'left: 0; transform: translateX(-50%);');
+
+        if (d.logo) {
+          var img = document.createElement('img');
+          img.className = 'timeline-logo';
+          img.src = d.logo;
+          img.alt = d.name;
+          content.appendChild(img);
+        } else {
+          var label = document.createElement('div');
+          label.className = 'timeline-label';
+          label.textContent = d.name;
+          content.appendChild(label);
+        }
+
+        var years = document.createElement('div');
+        years.className = 'timeline-years';
+        years.textContent = d.years;
+        content.appendChild(years);
+
+        if (d.role) {
+          var sub = document.createElement('div');
+          sub.className = 'timeline-sub';
+          sub.innerHTML = d.role.replace(/\n/g, '<br>');
+          content.appendChild(sub);
+        }
+
+        item.appendChild(content);
+
+        var dot = document.createElement('div');
+        dot.className = 'timeline-dot';
+        item.appendChild(dot);
+
+        var tooltip = document.createElement('div');
+        tooltip.className = 'timeline-tooltip';
+        tooltip.innerHTML = d.bullets.map(function(b) { return '&bull; ' + b; }).join('<br>');
+        item.appendChild(tooltip);
+
+        timeline.appendChild(item);
       });
-    }
+
+      // Chevrons
+      var chevrons = document.createElement('div');
+      chevrons.className = 'timeline-chevrons';
+      chevrons.innerHTML = '<svg width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        + '<polyline points="2,6 10,12 2,18" opacity="0.4"/>'
+        + '<polyline points="15,6 23,12 15,18" opacity="0.65"/>'
+        + '<polyline points="28,6 36,12 28,18" opacity="1"/>'
+        + '</svg>';
+      timeline.appendChild(chevrons);
+
+      // Touch support
+      if ('ontouchstart' in window) {
+        document.querySelectorAll('.timeline-item').forEach(function(item) {
+          item.addEventListener('click', function() {
+            var tt = this.querySelector('.timeline-tooltip');
+            if (!tt) return;
+            var isOpen = tt.style.display === 'block';
+            document.querySelectorAll('.timeline-tooltip').forEach(function(t) {
+              t.style.display = '';
+            });
+            if (!isOpen) tt.style.display = 'block';
+          });
+        });
+      }
+    })();
   </script>
   <script src="js/jspdf.umd.min.js"></script>
   <script>
     function exportPDF() {
       if (!window.jspdf) { alert('PDF library still loading, please try again.'); return; }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-      const margin = 60;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const usable = pageWidth - margin * 2;
-      let y = 50;
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF({ unit: 'pt', format: 'letter' });
+      var margin = 60;
+      var pageWidth = doc.internal.pageSize.getWidth();
+      var usable = pageWidth - margin * 2;
+      var y = 50;
 
       // Name
       doc.setFont('helvetica', 'bold');
@@ -446,7 +521,6 @@
       doc.line(margin, y, pageWidth - margin, y);
       y += 25;
 
-      // Section helper
       function section(title) {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(13);
@@ -458,17 +532,17 @@
         y += 15;
       }
 
-      // Entry helper
-      function entry(org, role, years, bullets) {
+      function entry(d) {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(30, 30, 30);
-        doc.text(org, margin, y);
+        doc.text(d.name, margin, y);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
-        doc.text(years, pageWidth - margin, y, { align: 'right' });
+        doc.text(d.pdfYears || d.years, pageWidth - margin, y, { align: 'right' });
         y += 14;
+        var role = d.pdfRole || d.role;
         if (role) {
           doc.setFont('helvetica', 'italic');
           doc.setFontSize(10);
@@ -479,7 +553,7 @@
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.setTextColor(50, 50, 50);
-        bullets.forEach(function(b) {
+        d.bullets.forEach(function(b) {
           var lines = doc.splitTextToSize('\u2022  ' + b, usable - 10);
           lines.forEach(function(line) {
             if (y > 720) { doc.addPage(); y = 50; }
@@ -490,32 +564,13 @@
         y += 10;
       }
 
-      // Experience
+      // Experience (reverse chronological)
       section('Experience');
-      entry('Urban Science', 'Senior Development Manager', '2012 \u2013 Present', [
-        'Manage three development teams with four products, 50+ million dollars annual revenue',
-        'Responsible for application architecture, hiring, training',
-        'Designed the company\'s HackerRank interview coding test'
-      ]);
-      entry('Frankenmuth Insurance', 'Network Analyst', '2008 \u2013 2010', [
-        'Administrator of several business critical systems such as firewalls, wifi, distribution network',
-        'Data center work \u2013 Rack design, purchasing, equipment installation'
-      ]);
+      timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
 
-      // Education
+      // Education (reverse chronological)
       section('Education');
-      entry('Michigan State University', 'MS \u2013 Computer Science', '2010 \u2013 2012', [
-        'Computer security research with advisor Dr. Alex X. Liu',
-        'Lead teaching assistant for EGR 100 course'
-      ]);
-      entry('Kettering University', 'BS \u2013 Computer Science', '2004 \u2013 2008', [
-        'President of WKUF-LP 94.3FM radio station',
-        'Computer Engineering Minor'
-      ]);
-      entry('Clio High School', null, '2000 \u2013 2004', [
-        'High honors, 3.8 GPA',
-        'DJed several events such as Homecoming, Snowcoming, and Halloween Dances'
-      ]);
+      timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
 
       doc.save('Marc_Santa_Resume.pdf');
     }
