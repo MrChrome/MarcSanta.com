@@ -127,6 +127,10 @@
       top: calc(100% + 1.5rem);
     }
 
+    .timeline-item:first-child .timeline-tooltip {
+      left: 0;
+    }
+
     .timeline-item:nth-child(even) .timeline-tooltip {
       bottom: calc(100% + 1.5rem);
     }
@@ -397,6 +401,23 @@
       </div>
     </div>
   </div>
+  <script>
+    if ('ontouchstart' in window) {
+      document.querySelectorAll('.timeline-item').forEach(function(item) {
+        item.addEventListener('click', function(e) {
+          var tooltip = this.querySelector('.timeline-tooltip');
+          if (!tooltip) return;
+          var isOpen = tooltip.style.display === 'block';
+          document.querySelectorAll('.timeline-tooltip').forEach(function(t) {
+            t.style.display = '';
+          });
+          if (!isOpen) {
+            tooltip.style.display = 'block';
+          }
+        });
+      });
+    }
+  </script>
   <script src="js/jspdf.umd.min.js"></script>
   <script>
     function exportPDF() {
