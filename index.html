@@ -204,6 +204,10 @@
       transition: opacity 0.3s;
     }
 
+    .timeline-logo-lg {
+      height: 42px;
+    }
+
     .timeline-item:hover .timeline-logo {
       opacity: 1;
     }
@@ -399,6 +403,8 @@
       },
       {
         name: 'Kettering University',
+        logo: 'images/kettering.png',
+        logoClass: 'timeline-logo-lg',
         years: '2004 \u2013 2008',
         role: 'BS \u2013 Computer Science',
         type: 'education',
@@ -417,7 +423,7 @@
         grow: 2,
         bullets: [
           'Administrator of several business critical systems such as firewalls, wifi, distribution network',
-          'Data center work including Rack design, purchasing, equipment installation'
+          'Data center work including rack design, purchasing, equipment installation'
         ]
       },
       {
@@ -466,7 +472,7 @@
 
         if (d.logo) {
           var img = document.createElement('img');
-          img.className = 'timeline-logo';
+          img.className = 'timeline-logo' + (d.logoClass ? ' ' + d.logoClass : '');
           img.src = d.logo;
           img.alt = d.name;
           content.appendChild(img);
