@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marc Santa - Timeline</title>
+  <title>Marc Santa</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <style>
     * {
       margin: 0;
@@ -36,10 +37,38 @@
       margin-bottom: 14rem;
       font-weight: 700;
       letter-spacing: 0.05em;
-      background: linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6, #a855f7, #ec4899);
+      background: linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6, #a855f7, #ec4899, #3b82f6);
+      background-size: 200% 200%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: gradientShift 6s ease infinite, flourishIn 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+      filter: drop-shadow(0 0 24px rgba(139, 92, 246, 0.3));
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes flourishIn {
+      0% {
+        opacity: 0;
+        letter-spacing: 0.3em;
+        transform: translateY(-20px) scale(0.9);
+        filter: drop-shadow(0 0 0 rgba(139, 92, 246, 0)) blur(8px);
+      }
+      60% {
+        opacity: 1;
+        transform: translateY(4px) scale(1.02);
+      }
+      100% {
+        opacity: 1;
+        letter-spacing: 0.05em;
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 24px rgba(139, 92, 246, 0.3)) blur(0);
+      }
     }
 
     .mobile-hint {
@@ -204,6 +233,10 @@
       transition: opacity 0.3s;
     }
 
+    .timeline-logo-lg {
+      height: 42px;
+    }
+
     .timeline-item:hover .timeline-logo {
       opacity: 1;
     }
@@ -276,7 +309,7 @@
         width: 2px;
         height: 100%;
         transform: none;
-        background: linear-gradient(180deg, #3b82f6, #8b5cf6, #ec4899);
+        background: linear-gradient(180deg, #ec4899, #8b5cf6, #3b82f6);
       }
 
       .timeline-item {
@@ -355,9 +388,9 @@
 
       .mobile-chevrons {
         display: flex;
-        justify-content: center;
-        padding-left: 2rem;
-        margin-bottom: 0.5rem;
+        justify-content: flex-start;
+        padding-left: calc(2rem - 11px);
+        margin-bottom: 0;
       }
 
       .timeline-item .timeline-content[style] {
@@ -399,6 +432,7 @@
       },
       {
         name: 'Kettering University',
+        logo: 'images/kettering.png',
         years: '2004 \u2013 2008',
         role: 'BS \u2013 Computer Science',
         type: 'education',
@@ -417,7 +451,7 @@
         grow: 2,
         bullets: [
           'Administrator of several business critical systems such as firewalls, wifi, distribution network',
-          'Data center work including Rack design, purchasing, equipment installation'
+          'Data center work including rack design, purchasing, equipment installation'
         ]
       },
       {
@@ -443,7 +477,7 @@
         grow: 8,
         last: true,
         bullets: [
-          'Manage three development teams with four products, 50+ million dollars annual revenue',
+          'Manage three development teams with four products, 50+ million dollars in annual revenue',
           'Responsible for application architecture, hiring, training',
           "Designed the company's HackerRank interview coding test"
         ]
@@ -466,7 +500,7 @@
 
         if (d.logo) {
           var img = document.createElement('img');
-          img.className = 'timeline-logo';
+          img.className = 'timeline-logo' + (d.logoClass ? ' ' + d.logoClass : '');
           img.src = d.logo;
           img.alt = d.name;
           content.appendChild(img);
