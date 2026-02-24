@@ -29,8 +29,8 @@ var timelineData = [
     type: 'experience',
     grow: 2,
     bullets: [
-      'Administrator of several business critical systems such as firewalls, wifi, VPN',
-      'Data center work including rack design, purchasing, equipment installation'
+      'Administrator of several business critical systems such as firewalls, wifi, VPN.',
+      'Data center work including rack design, purchasing, equipment installation.'
     ]
   },
   {
@@ -59,7 +59,7 @@ var timelineData = [
     last: true,
     bullets: [
       'Manage three development teams with four products, 50+ million dollars in annual revenue.',
-      'Responsible for application architecture, hiring, training.',
+      'Responsible for application architecture, hiring, and training.',
       "Designed the company's HackerRank interview coding test."
     ],
     pdfSections: [
@@ -68,7 +68,7 @@ var timelineData = [
         years: '2022 \u2013 Present',
         bullets: [
           'Manage three development teams with four products, 50+ million dollars in annual revenue.',
-          'Responsible for application architecture, hiring, training.',
+          'Responsible for application architecture, hiring, and training.',
           "Designed the company's HackerRank interview coding test."
         ]
       },
@@ -88,7 +88,7 @@ var timelineData = [
         bullets: [
           'Customized business management software for an automotive OEM client.',
           'Automated production of financial statements and other reports for automotive dealers.',
-          'Technologies involved include C#, SQL server, ASP.NET, Angular.'
+          'Technologies include C#, SQL Server, ASP.NET, and Angular.'
         ]
       }
     ]
