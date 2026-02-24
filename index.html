@@ -10,7 +10,18 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <button class="pdf-btn" onclick="exportPDF()">PDF</button>
+  <div class="resume-dropdown" id="resumeDropdown">
+    <button class="pdf-btn" onclick="toggleResumeDropdown()">
+      Resume
+      <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="1,1 5,5 9,1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="resume-dropdown-menu">
+      <button onclick="exportPDF(); closeResumeDropdown()">Download PDF</button>
+      <button onclick="exportWord(); closeResumeDropdown()">Download Word</button>
+    </div>
+  </div>
   <div class="pdf-hint">
     <span>learn more</span>
     <svg width="54" height="46" viewBox="0 0 54 46" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -33,5 +44,6 @@
   <script src="data.js"></script>
   <script src="app.js"></script>
   <script src="libs/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@8/build/index.umd.min.js"></script>
 </body>
 </html>

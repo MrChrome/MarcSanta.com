@@ -82,6 +82,19 @@
   }
 })();
 
+function toggleResumeDropdown() {
+  document.getElementById('resumeDropdown').classList.toggle('open');
+}
+
+function closeResumeDropdown() {
+  document.getElementById('resumeDropdown').classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+  var el = document.getElementById('resumeDropdown');
+  if (el && !el.contains(e.target)) el.classList.remove('open');
+});
+
 function exportPDF() {
   if (!window.jspdf) { alert('PDF library still loading, please try again.'); return; }
   var jsPDF = window.jspdf.jsPDF;
@@ -181,4 +194,103 @@ function exportPDF() {
   timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
 
   doc.save('Marc_Santa_Resume.pdf');
+}
+
+function exportWord() {
+  if (!window.docx) { alert('Word library still loading, please try again.'); return; }
+  var D = window.docx;
+  var paras = [];
+  var TAB_RIGHT = 9360; // twips: letter width minus 1in margins each side
+  var FONT = 'Arial';
+  // Colors matched exactly from PDF (RGB -> hex)
+  var C_NAME    = '1e1e1e'; // rgb(30,30,30)
+  var C_SECTION = '282828'; // rgb(40,40,40)
+  var C_ENTRY   = '1e1e1e'; // rgb(30,30,30)
+  var C_ROLE    = '3c3c3c'; // rgb(60,60,60)
+  var C_DATE    = '646464'; // rgb(100,100,100)
+  var C_BULLET  = '323232'; // rgb(50,50,50)
+
+  function r(opts) {
+    return new D.TextRun(Object.assign({ font: FONT, noProof: true }, opts));
+  }
+
+  // Name — 24pt bold centered
+  paras.push(new D.Paragraph({
+    alignment: 'center',
+    spacing: { after: 80, line: 276, lineRule: 'auto' },
+    children: [r({ text: 'Marc Santa', bold: true, size: 48, color: C_NAME })]
+  }));
+
+  // Contact — 10pt centered with bottom rule
+  paras.push(new D.Paragraph({
+    alignment: 'center',
+    spacing: { after: 160, line: 276, lineRule: 'auto' },
+    children: [r({ text: 'Greater Detroit, MI  |  marc.santa@icloud.com  |  www.marcsanta.com', size: 20, color: C_DATE })]
+  }));
+
+  function sectionHeader(title) {
+    paras.push(new D.Paragraph({
+      children: [r({ text: title.toUpperCase(), bold: true, size: 26, color: C_SECTION })],
+      border: { bottom: { color: 'C8C8C8', style: 'single', size: 4, space: 4 } },
+      spacing: { before: 280, after: 120, line: 276, lineRule: 'auto' }
+    }));
+  }
+
+  function renderBullets(bullets) {
+    bullets.forEach(function(b) {
+      var isSub = b.charCodeAt(0) === 0x25aa;
+      var txt = isSub ? b.slice(2) : b;
+      paras.push(new D.Paragraph({
+        indent: { left: isSub ? 560 : 200, hanging: 200 },
+        spacing: { after: 60, line: 276, lineRule: 'auto' },
+        children: [r({ text: (isSub ? '-  ' : '\u2022  ') + txt, size: 20, color: C_BULLET })]
+      }));
+    });
+  }
+
+  function roleRow(roleText, yearsText) {
+    // Use 'right' string directly — avoids any enum resolution issues with the UMD bundle
+    return new D.Paragraph({
+      tabStops: [{ type: 'right', position: TAB_RIGHT }],
+      spacing: { after: 80, line: 276, lineRule: 'auto' },
+      children: [
+        r({ text: roleText, italics: true, size: 20, color: C_ROLE }),
+        r({ text: '\t' + yearsText, size: 20, color: C_DATE })
+      ]
+    });
+  }
+
+  function entry(d) {
+    paras.push(new D.Paragraph({
+      children: [r({ text: d.name, bold: true, size: 22, color: C_ENTRY })],
+      spacing: { before: 200, after: 60, line: 276, lineRule: 'auto' }
+    }));
+    if (d.pdfSections) {
+      d.pdfSections.forEach(function(s) {
+        paras.push(roleRow(s.role, s.years || ''));
+        renderBullets(s.bullets);
+      });
+    } else {
+      var role = d.pdfRole || d.role;
+      if (role) paras.push(roleRow(role, d.pdfYears || d.years));
+      renderBullets(d.bullets);
+    }
+  }
+
+  sectionHeader('Experience');
+  timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
+  sectionHeader('Education');
+  timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
+
+  var resumeDoc = new D.Document({ sections: [{ properties: {}, children: paras }] });
+  D.Packer.toBlob(resumeDoc).then(function(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = window.document.createElement('a');
+    a.href = url;
+    a.download = 'Marc_Santa_Resume.docx';
+    window.document.body.appendChild(a);
+    a.click();
+    window.document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
 }
