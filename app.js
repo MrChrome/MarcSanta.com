@@ -99,7 +99,7 @@ function exportPDF() {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text('Greater Detroit, MI  |  mrchrome@gmail.com  |  www.marcsanta.com', pageWidth / 2, y, { align: 'center' });
+  doc.text('Greater Detroit, MI  |  marc.santa@icloud.com |  www.marcsanta.com', pageWidth / 2, y, { align: 'center' });
   y += 20;
 
   y += 10;
