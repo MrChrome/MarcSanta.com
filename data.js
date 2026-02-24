@@ -5,8 +5,8 @@ var timelineData = [
     type: 'education',
     grow: 4,
     bullets: [
-      'High honors, 3.8 GPA',
-      'DJed several events such as Homecoming, Snowcoming, and Halloween Dances'
+      'High honors, 3.8 GPA.',
+      'DJed several events such as Homecoming, Snowcoming, and Halloween Dances.'
     ]
   },
   {
@@ -17,8 +17,8 @@ var timelineData = [
     type: 'education',
     grow: 4,
     bullets: [
-      'President of WKUF-LP 94.3FM radio station',
-      'Computer Engineering Minor'
+      'President of WKUF-LP 94.3FM radio station.',
+      'Computer Engineering Minor.'
     ]
   },
   {
@@ -41,11 +41,11 @@ var timelineData = [
     type: 'education',
     grow: 3,
     bullets: [
-      'Computer security research with advisor Dr. Alex X. Liu',
-      'Lead teaching assistant for EGR 100 course',
-      '\u25aa Taught multiple sections of labs for 35+ students',
-      '\u25aa Designed assignments that were used for a class enrolling more than 700 students',
-      '\u25aa Coordinated a team of 10 teaching assistants'
+      'Computer security research with advisor Dr. Alex X. Liu.',
+      'Lead teaching assistant for EGR 100 course.',
+      '\u25aa Taught multiple sections of labs for 35+ students.',
+      '\u25aa Designed assignments that were used for a class enrolling more than 700 students.',
+      '\u25aa Coordinated a team of 10 teaching assistants.'
     ]
   },
   {
@@ -58,37 +58,37 @@ var timelineData = [
     grow: 8,
     last: true,
     bullets: [
-      'Manage three development teams with four products, 50+ million dollars in annual revenue',
-      'Responsible for application architecture, hiring, training',
-      "Designed the company's HackerRank interview coding test"
+      'Manage three development teams with four products, 50+ million dollars in annual revenue.',
+      'Responsible for application architecture, hiring, training.',
+      "Designed the company's HackerRank interview coding test."
     ],
     pdfSections: [
       {
         role: 'Senior Development Manager',
         years: '2022 \u2013 Present',
         bullets: [
-          'Manage three development teams with four products, 50+ million dollars in annual revenue',
-          'Responsible for application architecture, hiring, training',
-          "Designed the company's HackerRank interview coding test"
+          'Manage three development teams with four products, 50+ million dollars in annual revenue.',
+          'Responsible for application architecture, hiring, training.',
+          "Designed the company's HackerRank interview coding test."
         ]
       },
       {
         role: 'Development Manager',
         years: '2016 \u2013 2022',
         bullets: [
-          'Core development manager of a business management solution and an online advertising solution',
-          'Recruit, train, and mentor a team of geographically dispersed developers',
-          'Advertising solution handles 1 million hits per hour during busy periods',
-          'Financial solution processes monthly financials for 20,000 auto dealers worldwide'
+          'Core development manager of a business management solution and an online advertising solution.',
+          'Recruit, train, and mentor a team of geographically dispersed developers.',
+          'Advertising solution handles 1 million hits per hour during busy periods.',
+          'Financial solution processes monthly financials for 20,000 auto dealers worldwide.'
         ]
       },
       {
         role: 'Developer',
         years: '2012 \u2013 2016',
         bullets: [
-          'Customized business management software for an automotive OEM client',
-          'Automated production of financial statements and other reports for automotive dealers',
-          'Technologies involved include C#, SQL server, ASP.NET, Angular'
+          'Customized business management software for an automotive OEM client.',
+          'Automated production of financial statements and other reports for automotive dealers.',
+          'Technologies involved include C#, SQL server, ASP.NET, Angular.'
         ]
       }
     ]
