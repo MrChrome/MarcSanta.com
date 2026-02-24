@@ -95,6 +95,78 @@ document.addEventListener('click', function(e) {
   if (el && !el.contains(e.target)) el.classList.remove('open');
 });
 
+function downloadFile(content, filename, mimeType) {
+  var blob = new Blob([content], { type: mimeType });
+  var url = URL.createObjectURL(blob);
+  var a = window.document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  window.document.body.appendChild(a);
+  a.click();
+  window.document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportText() {
+  var WIDTH = 80;
+  var lines = [];
+
+  lines.push('Marc Santa');
+  lines.push('Greater Detroit, MI  |  marc.santa@icloud.com  |  www.marcsanta.com');
+  lines.push('');
+
+  function section(title) {
+    lines.push(title.toUpperCase());
+    lines.push('\u2500'.repeat(WIDTH));
+  }
+
+  function renderBullets(bullets) {
+    bullets.forEach(function(b) {
+      var isSub = b.charCodeAt(0) === 0x25aa;
+      lines.push((isSub ? '    - ' : '  \u2022 ') + (isSub ? b.slice(2).trim() : b));
+    });
+  }
+
+  function roleLine(role, years) {
+    var pad = WIDTH - role.length - years.length;
+    lines.push(pad > 0 ? role + ' '.repeat(pad) + years : role + '   ' + years);
+  }
+
+  function entry(d) {
+    lines.push('');
+    lines.push(d.name);
+    if (d.pdfSections) {
+      d.pdfSections.forEach(function(s) {
+        roleLine(s.role, s.years || '');
+        renderBullets(s.bullets);
+      });
+    } else {
+      var role = d.pdfRole || d.role;
+      if (role) roleLine(role, d.pdfYears || d.years);
+      renderBullets(d.bullets);
+    }
+  }
+
+  section('Experience');
+  timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
+  lines.push('');
+  section('Education');
+  timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
+
+  downloadFile(lines.join('\n'), 'Marc_Santa_Resume.txt', 'text/plain');
+}
+
+function exportJSON() {
+  var data = timelineData.map(function(d) {
+    var out = {};
+    Object.keys(d).forEach(function(k) {
+      if (k !== 'grow' && k !== 'pdfYears') out[k] = d[k];
+    });
+    return out;
+  });
+  downloadFile(JSON.stringify(data, null, 2), 'Marc_Santa_Resume.json', 'application/json');
+}
+
 function exportPDF() {
   if (!window.jspdf) { alert('PDF library still loading, please try again.'); return; }
   var jsPDF = window.jspdf.jsPDF;
@@ -284,13 +356,6 @@ function exportWord() {
 
   var resumeDoc = new D.Document({ sections: [{ properties: {}, children: paras }] });
   D.Packer.toBlob(resumeDoc).then(function(blob) {
-    var url = URL.createObjectURL(blob);
-    var a = window.document.createElement('a');
-    a.href = url;
-    a.download = 'Marc_Santa_Resume.docx';
-    window.document.body.appendChild(a);
-    a.click();
-    window.document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadFile(blob, 'Marc_Santa_Resume.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
   });
 }

@@ -1,7 +1,7 @@
 var timelineData = [
   {
     name: 'Clio High School',
-    years: '2000 \u2013 2004',
+    years: '2000 - 2004',
     type: 'education',
     grow: 4,
     bullets: [
@@ -12,8 +12,8 @@ var timelineData = [
   {
     name: 'Kettering University',
     logo: 'images/kettering.png',
-    years: '2004 \u2013 2008',
-    role: 'BS \u2013 Computer Science',
+    years: '2004 - 2008',
+    role: 'BS - Computer Science',
     type: 'education',
     grow: 4,
     bullets: [
@@ -24,7 +24,7 @@ var timelineData = [
   {
     name: 'Frankenmuth Insurance',
     logo: 'images/frankenmuth.svg',
-    years: '2008 \u2013 2010',
+    years: '2008 - 2010',
     role: 'Network Analyst',
     type: 'experience',
     grow: 2,
@@ -36,8 +36,8 @@ var timelineData = [
   {
     name: 'Michigan State University',
     logo: 'images/msu.svg',
-    years: '2010 \u2013 2012',
-    role: 'MS \u2013 Computer Science',
+    years: '2010 - 2012',
+    role: 'MS - Computer Science',
     type: 'education',
     grow: 3,
     bullets: [
@@ -51,8 +51,8 @@ var timelineData = [
   {
     name: 'Urban Science',
     logo: 'images/urbanscience.svg',
-    years: '2012 \u2013 Today',
-    pdfYears: '2012 \u2013 Present',
+    years: '2012 - Today',
+    pdfYears: '2012 - Present',
     role: 'Senior Developer\nDevelopment Manager\nSenior Development Manager',
     type: 'experience',
     grow: 8,
@@ -65,7 +65,7 @@ var timelineData = [
     pdfSections: [
       {
         role: 'Senior Development Manager',
-        years: '2022 \u2013 Present',
+        years: '2022 - Present',
         bullets: [
           'Manage three development teams with four products, 50+ million dollars in annual revenue.',
           'Responsible for application architecture, hiring, and training.',
@@ -74,7 +74,7 @@ var timelineData = [
       },
       {
         role: 'Development Manager',
-        years: '2016 \u2013 2022',
+        years: '2016 - 2022',
         bullets: [
           'Core development manager of a business management solution and an online advertising solution.',
           'Recruit, train, and mentor a team of geographically dispersed developers.',
@@ -84,7 +84,7 @@ var timelineData = [
       },
       {
         role: 'Developer',
-        years: '2012 \u2013 2016',
+        years: '2012 - 2016',
         bullets: [
           'Customized business management software for an automotive OEM client.',
           'Automated production of financial statements and other reports for automotive dealers.',
