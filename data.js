@@ -29,7 +29,7 @@ var timelineData = [
     type: 'experience',
     grow: 2,
     bullets: [
-      'Administrator of several business critical systems such as firewalls, wifi, VPN.',
+      'Administrator of several business critical systems such as firewalls, Wi-Fi, VPN.',
       'Data center work including rack design, purchasing, equipment installation.'
     ]
   },
