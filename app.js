@@ -59,7 +59,7 @@
   // Chevrons
   var chevrons = document.createElement('div');
   chevrons.className = 'timeline-chevrons';
-  chevrons.innerHTML = '<svg width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+  chevrons.innerHTML = '<svg width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     + '<polyline points="2,6 10,12 2,18" opacity="0.4"/>'
     + '<polyline points="15,6 23,12 15,18" opacity="0.65"/>'
     + '<polyline points="28,6 36,12 28,18" opacity="1"/>'
