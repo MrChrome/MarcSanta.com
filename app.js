@@ -3,14 +3,14 @@
   var timeline = document.getElementById('timeline');
   timelineData.forEach(function(d) {
     var item = document.createElement('div');
-    item.className = 'timeline-item';
+    item.className = 'timeline-item' + (d.fork ? ' timeline-fork' : '');
     var style = 'flex-grow: ' + d.grow + ';';
     if (d.last) style += ' align-items: flex-start;';
     item.setAttribute('style', style);
 
     var content = document.createElement('div');
     content.className = 'timeline-content';
-    if (d.last) content.setAttribute('style', 'left: 0; transform: translateX(-50%);');
+    if (d.last && !d.fork) content.setAttribute('style', 'left: 0; transform: translateX(-50%);');
 
     if (d.logo) {
       var img = document.createElement('img');
@@ -43,6 +43,54 @@
     dot.className = 'timeline-dot';
     item.appendChild(dot);
 
+    if (d.fork) {
+      var forkDepth = d.forkDepth || 70;
+      var forkX = d.forkX || 14;
+      var forkColor = d.forkColor || '#38bdf8';
+      item.dataset.forkDepth = forkDepth;
+      item.dataset.forkX = forkX;
+      item.dataset.forkColor = forkColor;
+      item.dataset.forkName = d.name;
+      item.dataset.forkYears = d.years;
+      item.style.setProperty('--fork-depth', forkDepth);
+      item.style.setProperty('--fork-x', forkX);
+      item.style.setProperty('--fork-color', forkColor);
+
+      var ns = 'http://www.w3.org/2000/svg';
+      var forkSvg = document.createElementNS(ns, 'svg');
+      forkSvg.setAttribute('class', 'timeline-fork-svg');
+      forkSvg.setAttribute('viewBox', '-2 -2 ' + (forkX + 16) + ' ' + (forkDepth + 16));
+      forkSvg.setAttribute('width', forkX + 16);
+      forkSvg.setAttribute('height', forkDepth + 16);
+      forkSvg.setAttribute('fill', 'none');
+      // Diagonal from junction (0,0) down to bend point (forkX, forkDepth)
+      var forkLine = document.createElementNS(ns, 'line');
+      forkLine.setAttribute('x1', '0'); forkLine.setAttribute('y1', '0');
+      forkLine.setAttribute('x2', forkX); forkLine.setAttribute('y2', forkDepth);
+      forkLine.setAttribute('stroke', forkColor);
+      forkLine.setAttribute('stroke-width', '2.5');
+      forkLine.setAttribute('stroke-linecap', 'round');
+      // Dot at bend point
+      var forkDot = document.createElementNS(ns, 'circle');
+      forkDot.setAttribute('cx', forkX); forkDot.setAttribute('cy', forkDepth);
+      forkDot.setAttribute('r', '7');
+      forkDot.setAttribute('fill', forkColor);
+      forkDot.setAttribute('stroke', '#0f172a');
+      forkDot.setAttribute('stroke-width', '3');
+      // Outer glow ring
+      var forkRing = document.createElementNS(ns, 'circle');
+      forkRing.setAttribute('cx', forkX); forkRing.setAttribute('cy', forkDepth);
+      forkRing.setAttribute('r', '10');
+      forkRing.setAttribute('fill', 'none');
+      forkRing.setAttribute('stroke', forkColor);
+      forkRing.setAttribute('stroke-width', '2');
+      forkRing.setAttribute('opacity', '0.6');
+      forkSvg.appendChild(forkLine);
+      forkSvg.appendChild(forkDot);
+      forkSvg.appendChild(forkRing);
+      item.appendChild(forkSvg);
+    }
+
     var tooltip = document.createElement('div');
     tooltip.className = 'timeline-tooltip';
     tooltip.innerHTML = d.bullets.map(function(b) {
@@ -59,7 +107,7 @@
   // Chevrons
   var chevrons = document.createElement('div');
   chevrons.className = 'timeline-chevrons';
-  chevrons.innerHTML = '<svg width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+  chevrons.innerHTML = '<svg width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="#0c4a6e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     + '<polyline points="2,6 10,12 2,18" opacity="0.4"/>'
     + '<polyline points="15,6 23,12 15,18" opacity="0.65"/>'
     + '<polyline points="28,6 36,12 28,18" opacity="1"/>'
@@ -74,13 +122,147 @@
         if (!tt) return;
         var isOpen = tt.style.display === 'block';
         document.querySelectorAll('.timeline-tooltip').forEach(function(t) {
-          t.style.display = '';
+          t.style.display = 'none';
         });
         if (!isOpen) tt.style.display = 'block';
       });
     });
   }
+
+  buildForkArms();
 })();
+
+function buildForkArms() {
+  // Remove any existing arms
+  document.querySelectorAll('.fork-arm, .fork-arm-mobile').forEach(function(el) {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  });
+
+  var timelineEl = document.getElementById('timeline');
+  var timelineRect = timelineEl.getBoundingClientRect();
+  var isMobile = window.innerWidth <= 768;
+
+  document.querySelectorAll('.timeline-item.timeline-fork').forEach(function(item) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var depth = parseInt(item.dataset.forkDepth) || 70;
+
+    var color = item.dataset.forkColor || '#38bdf8';
+    var cr = parseInt(color.slice(1,3), 16);
+    var cg = parseInt(color.slice(3,5), 16);
+    var cb = parseInt(color.slice(5,7), 16);
+    var colorAlpha = 'rgba(' + cr + ',' + cg + ',' + cb + ',0.6)';
+
+    if (isMobile) {
+      // Mobile: L-shaped branch from main dot going RIGHT then UP
+      var dotEl = item.querySelector('.timeline-dot');
+      var dotRect = dotEl.getBoundingClientRect();
+      // The dot's getBoundingClientRect() includes its translateX(-55%) transform,
+      // which shifts it left of the actual main vertical line. Use the line's true
+      // X instead: the timeline's padding-left (where ::before is positioned).
+      var mainLineX = Math.round(parseFloat(getComputedStyle(timelineEl).paddingLeft));
+      var dotCY = Math.round(dotRect.top  - timelineRect.top  + dotRect.height / 2);
+
+      // Vary RIGHT per item via forkDepth so Peter and Audrey don't overlap
+      var RIGHT = Math.round(depth * 0.5 + 10);
+      var UP = 55;
+
+      var mArm = document.createElement('div');
+      mArm.className = 'fork-arm-mobile';
+      mArm.style.left = mainLineX + 'px';
+      mArm.style.top  = (dotCY - UP) + 'px';
+
+      // L-shape SVG: (0,UP) → right to (RIGHT,UP) → up to (RIGHT,0)
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('width',   RIGHT + 20);
+      svg.setAttribute('height',  UP + 20);
+      svg.setAttribute('viewBox', '-5 -10 ' + (RIGHT + 20) + ' ' + (UP + 20));
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('overflow', 'visible');
+
+      var lp = document.createElementNS(ns, 'path');
+      lp.setAttribute('d', 'M 0,' + UP + ' H ' + RIGHT + ' V 0');
+      lp.setAttribute('stroke', color);
+      lp.setAttribute('stroke-width', '2.5');
+      lp.setAttribute('stroke-linecap', 'round');
+      lp.setAttribute('stroke-linejoin', 'round');
+      lp.setAttribute('fill', 'none');
+
+      var eDot = document.createElementNS(ns, 'circle');
+      eDot.setAttribute('cx', RIGHT); eDot.setAttribute('cy', '0');
+      eDot.setAttribute('r', '7');
+      eDot.setAttribute('fill', color);
+      eDot.setAttribute('stroke', '#0f172a');
+      eDot.setAttribute('stroke-width', '3');
+
+      var eRing = document.createElementNS(ns, 'circle');
+      eRing.setAttribute('cx', RIGHT); eRing.setAttribute('cy', '0');
+      eRing.setAttribute('r', '10');
+      eRing.setAttribute('fill', 'none');
+      eRing.setAttribute('stroke', color);
+      eRing.setAttribute('stroke-width', '2');
+      eRing.setAttribute('opacity', '0.6');
+
+      svg.appendChild(lp);
+      svg.appendChild(eDot);
+      svg.appendChild(eRing);
+      mArm.appendChild(svg);
+
+      // Label at the top of the branch (top-right of arm)
+      var lbl = document.createElement('div');
+      lbl.className = 'fork-arm-mobile-label';
+      lbl.style.left = (RIGHT + 18) + 'px';
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'timeline-label';
+      nameEl.textContent = item.dataset.forkName || '';
+
+      var yearsEl = document.createElement('div');
+      yearsEl.className = 'timeline-years';
+      yearsEl.textContent = item.dataset.forkYears || '';
+
+      lbl.appendChild(nameEl);
+      lbl.appendChild(yearsEl);
+      mArm.appendChild(lbl);
+
+      timelineEl.appendChild(mArm);
+
+    } else {
+      // Desktop: horizontal arm extending to the right edge with chevrons
+      var itemRect = item.getBoundingClientRect();
+      var fx = parseInt(item.dataset.forkX) || 14;
+      var armLeft = Math.round(itemRect.left - timelineRect.left + itemRect.width / 2 + fx);
+      var armTop  = Math.round(itemRect.top  - timelineRect.top  + itemRect.height / 2 + depth - 12);
+
+      var arm = document.createElement('div');
+      arm.className = 'fork-arm';
+      arm.style.left = armLeft + 'px';
+      arm.style.top  = armTop  + 'px';
+      arm.style.setProperty('--fork-color', color);
+      arm.style.setProperty('--fork-color-alpha', colorAlpha);
+
+      var chevSvg = document.createElementNS(ns, 'svg');
+      chevSvg.setAttribute('class', 'fork-arm-chevrons');
+      chevSvg.setAttribute('width', '40');
+      chevSvg.setAttribute('height', '24');
+      chevSvg.setAttribute('viewBox', '0 0 40 24');
+      chevSvg.setAttribute('fill', 'none');
+      chevSvg.setAttribute('stroke', color);
+      chevSvg.setAttribute('stroke-width', '1.8');
+      chevSvg.setAttribute('stroke-linecap', 'round');
+      chevSvg.setAttribute('stroke-linejoin', 'round');
+      [['2,6 10,12 2,18', '0.4'], ['15,6 23,12 15,18', '0.65'], ['28,6 36,12 28,18', '1']].forEach(function(p) {
+        var poly = document.createElementNS(ns, 'polyline');
+        poly.setAttribute('points', p[0]);
+        poly.setAttribute('opacity', p[1]);
+        chevSvg.appendChild(poly);
+      });
+      arm.appendChild(chevSvg);
+      timelineEl.appendChild(arm);
+    }
+  });
+}
+
+window.addEventListener('resize', buildForkArms);
 
 function toggleResumeDropdown() {
   document.getElementById('resumeDropdown').classList.toggle('open');

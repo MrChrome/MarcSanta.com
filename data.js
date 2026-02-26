@@ -55,8 +55,7 @@ var timelineData = [
     pdfYears: '2012 - Present',
     role: 'Senior Developer\nDevelopment Manager\nSenior Development Manager',
     type: 'experience',
-    grow: 8,
-    last: true,
+    grow: 6,
     bullets: [
       'Manage three development teams with four products, 50+ million dollars in annual revenue.',
       'Responsible for application architecture, hiring, and training.',
@@ -92,5 +91,27 @@ var timelineData = [
         ]
       }
     ]
+  },
+  {
+    name: 'Peter Santa',
+    years: '2023',
+    type: 'personal',
+    fork: true,
+    forkDepth: 145,
+    forkX: 34,
+    forkColor: '#075985',
+    grow: 4,
+    bullets: ['Born 2023.']
+  },
+  {
+    name: 'Audrey Santa',
+    years: '2026',
+    type: 'personal',
+    fork: true,
+    forkDepth: 65,
+    forkColor: '#0c4a6e',
+    last: true,
+    grow: 2,
+    bullets: ['Born 2026.']
   }
 ];

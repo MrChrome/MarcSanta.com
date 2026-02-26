@@ -463,4 +463,121 @@ h1 {
   .timeline-item:last-of-type {
     align-items: flex-start;
   }
+
+}
+
+/* Fork items - personal milestones */
+
+/* Hide the real dot — SVG circle at the fork endpoint replaces it */
+.timeline-item.timeline-fork .timeline-dot {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Content anchored below the bend dot; depth and x-offset vary per item */
+.timeline-item.timeline-fork .timeline-content {
+  top: calc(50% + var(--fork-depth) * 1px + 18px);
+  bottom: auto;
+  left: calc(50% + var(--fork-x, 14) * 1px);
+  transform: translateX(-50%);
+}
+
+.timeline-item.timeline-fork:hover .timeline-content {
+  transform: translateX(-50%) translateY(3px);
+}
+
+.timeline-item.timeline-fork .timeline-tooltip {
+  top: calc(50% + var(--fork-depth) * 1px + 64px);
+  bottom: auto;
+  left: calc(50% + var(--fork-x, 14) * 1px);
+  transform: translateX(-50%);
+}
+
+.timeline-item.timeline-fork::after {
+  content: none;
+}
+
+/* SVG positioned so its (0,0) aligns with the junction on the main line.
+   Width/height are set dynamically by JS based on forkDepth. */
+.timeline-fork-svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-2px, -2px);
+  overflow: visible;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Horizontal arm extending from the bend dot to the right edge of the timeline */
+.fork-arm {
+  position: absolute;
+  height: 24px;
+  right: 1rem;
+  overflow: visible;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.fork-arm::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 44px;
+  height: 2.5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, var(--fork-color, #38bdf8), var(--fork-color-alpha, rgba(56, 189, 248, 0.6)));
+  border-radius: 2px;
+}
+
+.fork-arm-chevrons {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Mobile fork arm — L-shaped branch (right then up) */
+.fork-arm-mobile {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.fork-arm-mobile-label {
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .timeline-fork-svg {
+    display: none;
+  }
+
+  /* Restore real dot on mobile since SVG is hidden */
+  .timeline-item.timeline-fork .timeline-dot {
+    opacity: 1;
+    background: var(--fork-color, #38bdf8);
+    box-shadow: 0 0 0 3px var(--fork-color, #38bdf8);
+  }
+
+  /* Hide inline content — label/year shown on the branch arm instead */
+  .timeline-item.timeline-fork .timeline-content {
+    display: none;
+  }
+
+  .timeline-item.timeline-fork .timeline-tooltip {
+    transform: none;
+  }
+
+  /* Remove the small bar stub — mobile arm handles the branch */
+  .timeline-item.timeline-fork::after {
+    content: none;
+  }
 }
