@@ -244,6 +244,19 @@ h1 {
   z-index: 1000;
 }
 
+.github-link {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  color: #475569;
+  transition: color 0.2s;
+  z-index: 1000;
+}
+
+.github-link:hover {
+  color: #94a3b8;
+}
+
 .pdf-btn {
   background: #1e293b;
   border: 1px solid #334155;
