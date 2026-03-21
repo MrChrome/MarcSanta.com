@@ -244,6 +244,15 @@ function buildForkArms() {
 
       mArm.addEventListener('mouseenter', function() { item.classList.add('fork-hovered'); });
       mArm.addEventListener('mouseleave', function() { item.classList.remove('fork-hovered'); });
+      if ('ontouchstart' in window) {
+        mArm.addEventListener('click', function() {
+          var tt = item.querySelector('.timeline-tooltip');
+          if (!tt) return;
+          var isOpen = tt.style.display === 'block';
+          document.querySelectorAll('.timeline-tooltip').forEach(function(t) { t.style.display = 'none'; });
+          if (!isOpen) tt.style.display = 'block';
+        });
+      }
       timelineEl.appendChild(mArm);
 
     } else {
