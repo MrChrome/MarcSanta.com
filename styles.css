@@ -164,7 +164,8 @@ h1 {
   bottom: calc(100% + 1.5rem);
 }
 
-.timeline-item:hover .timeline-tooltip {
+.timeline-item:hover .timeline-tooltip,
+.timeline-item.fork-hovered .timeline-tooltip {
   display: block;
 }
 
@@ -481,6 +482,17 @@ h1 {
 
 /* Fork items - personal milestones */
 
+.timeline-fork-svg circle {
+  transition: transform 0.3s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.timeline-item.timeline-fork:hover .timeline-fork-svg circle,
+.timeline-item.timeline-fork.fork-hovered .timeline-fork-svg circle {
+  transform: scale(1.4);
+}
+
 /* Hide the real dot — SVG circle at the fork endpoint replaces it */
 .timeline-item.timeline-fork .timeline-dot {
   opacity: 0;
@@ -495,7 +507,8 @@ h1 {
   transform: translateX(-50%);
 }
 
-.timeline-item.timeline-fork:hover .timeline-content {
+.timeline-item.timeline-fork:hover .timeline-content,
+.timeline-item.timeline-fork.fork-hovered .timeline-content {
   transform: translateX(-50%) translateY(3px);
 }
 
@@ -529,7 +542,6 @@ h1 {
   right: 1rem;
   overflow: visible;
   z-index: 1;
-  pointer-events: none;
 }
 
 .fork-arm::before {
@@ -554,7 +566,6 @@ h1 {
 /* Mobile fork arm — L-shaped branch (right then up) */
 .fork-arm-mobile {
   position: absolute;
-  pointer-events: none;
   z-index: 2;
 }
 

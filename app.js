@@ -88,6 +88,8 @@
       forkSvg.appendChild(forkLine);
       forkSvg.appendChild(forkDot);
       forkSvg.appendChild(forkRing);
+      forkSvg.addEventListener('mouseenter', function() { item.classList.add('fork-hovered'); });
+      forkSvg.addEventListener('mouseleave', function() { item.classList.remove('fork-hovered'); });
       item.appendChild(forkSvg);
     }
 
@@ -240,6 +242,8 @@ function buildForkArms() {
       lbl.appendChild(yearsEl);
       mArm.appendChild(lbl);
 
+      mArm.addEventListener('mouseenter', function() { item.classList.add('fork-hovered'); });
+      mArm.addEventListener('mouseleave', function() { item.classList.remove('fork-hovered'); });
       timelineEl.appendChild(mArm);
 
     } else {
@@ -273,6 +277,8 @@ function buildForkArms() {
         chevSvg.appendChild(poly);
       });
       arm.appendChild(chevSvg);
+      arm.addEventListener('mouseenter', function() { item.classList.add('fork-hovered'); });
+      arm.addEventListener('mouseleave', function() { item.classList.remove('fork-hovered'); });
       timelineEl.appendChild(arm);
     }
   });
