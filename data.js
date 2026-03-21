@@ -101,7 +101,9 @@ var timelineData = [
     forkX: 34,
     forkColor: '#075985',
     grow: 4,
-    bullets: ['Born 2023.']
+    bullets: ['Born 2023.'],
+    birthDate: '2023-10-10',
+    pronoun: 'He'
   },
   {
     name: 'Audrey Santa',
@@ -112,6 +114,8 @@ var timelineData = [
     forkColor: '#0c4a6e',
     last: true,
     grow: 2,
-    bullets: ['Born 2026.']
+    bullets: ['Born 2026.'],
+    birthDate: '2026-02-02',
+    pronoun: 'She'
   }
 ];

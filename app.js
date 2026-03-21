@@ -93,7 +93,23 @@
 
     var tooltip = document.createElement('div');
     tooltip.className = 'timeline-tooltip';
-    tooltip.innerHTML = d.bullets.map(function(b) {
+    var tooltipBullets = d.bullets.slice();
+    if (d.birthDate && d.pronoun) {
+      var now = new Date();
+      var birth = new Date(d.birthDate + 'T00:00:00');
+      var years = now.getFullYear() - birth.getFullYear();
+      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
+      var ageStr;
+      if (years < 1) {
+        var months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+        if (now.getDate() < birth.getDate()) months--;
+        ageStr = months + ' month' + (months === 1 ? '' : 's') + ' old';
+      } else {
+        ageStr = years + ' year' + (years === 1 ? '' : 's') + ' old';
+      }
+      tooltipBullets.push(d.pronoun + ' is ' + ageStr + '.');
+    }
+    tooltip.innerHTML = tooltipBullets.map(function(b) {
       if (b.charCodeAt(0) === 0x25aa) {
         return '<span style="display:block;padding-left:1rem;">' + b + '</span>';
       }
