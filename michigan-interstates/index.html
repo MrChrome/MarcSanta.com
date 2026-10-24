@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&family=Overpass+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: road-atlas sheet — title block, control strip, full-width zoomable map, then mileage-by-year chart and the segment register. */
+/* Layout: road-atlas sheet — title block, control strip, full-width zoomable map, then the segment register and mileage-by-year chart. */
 :root {
   --bg: #f3f5f4;
   --paper: #fbfcfb;
@@ -169,17 +169,17 @@ tr.rowlink:hover td { background: color-mix(in srgb, var(--sign) 8%, transparent
   </div>
 
   <section class="panel">
+    <h2>Segment register</h2>
+    <p class="sub">All mapped segments. Click Route or Opened to sort; click a row to find it on the map.</p>
+    <div class="tablewrap"><table><thead><tr><th><button class="sortby" data-k="route" type="button">Route</button></th><th>From</th><th>To</th><th aria-sort="ascending"><button class="sortby" data-k="year" type="button">Opened</button></th><th>Detail</th></tr></thead><tbody id="tbody"></tbody></table></div>
+  </section>
+
+  <section class="panel">
     <h2>Miles opened per year</h2>
     <p class="sub">Approximate centerline miles, measured on the map geometry. Click a bar to set the timeline to that year. The 1957 to 1964 surge follows the 1956 Federal-Aid Highway Act; the long tail is urban freeways and the I-69 gaps around Lansing.</p>
     <div class="chartwrap"><svg id="chart" viewBox="0 0 900 190" preserveAspectRatio="none"></svg></div>
     <div class="legendramp"><span>1942</span><div class="ramp" id="ramp"></div><span>1992</span></div>
     <div class="stats" id="stats"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Segment register</h2>
-    <p class="sub">All mapped segments. Click Route or Opened to sort; click a row to find it on the map.</p>
-    <div class="tablewrap"><table><thead><tr><th aria-sort="ascending"><button class="sortby" data-k="route" type="button">Route</button></th><th>From</th><th>To</th><th><button class="sortby" data-k="year" type="button">Opened</button></th><th>Detail</th></tr></thead><tbody id="tbody"></tbody></table></div>
   </section>
 
   <section class="notes">
@@ -424,13 +424,13 @@ function sortRegister(k, dir) {
     if (b.dataset.k === k) th.setAttribute("aria-sort", dir > 0 ? "ascending" : "descending"); else th.removeAttribute("aria-sort");
   });
 }
-let regSort = { k: "route", dir: 1 };
+let regSort = { k: "year", dir: 1 };
 document.querySelectorAll(".sortby").forEach(b => b.addEventListener("click", () => {
   const k = b.dataset.k;
   regSort = { k, dir: regSort.k === k && k === "year" ? -regSort.dir : 1 };
   sortRegister(regSort.k, regSort.dir);
 }));
-sortRegister("route", 1);
+sortRegister("year", 1);
 
 vb = fit(PRESETS.state); setYear(1992);
 </script>
