@@ -110,6 +110,11 @@ details summary { cursor: pointer; font: 800 18px var(--font-display); }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: left; padding: 6px 10px 5px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
 th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+.sortby { all: unset; cursor: pointer; white-space: nowrap; }
+.sortby:hover, th[aria-sort] .sortby { color: var(--ink); }
+.sortby:focus-visible { outline: 2px solid var(--sign); outline-offset: 2px; }
+th[aria-sort="ascending"] .sortby::after { content: " ▲"; }
+th[aria-sort="descending"] .sortby::after { content: " ▼"; }
 td.yr { font: 600 13px var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
 td.rt { font-weight: 800; white-space: nowrap; }
 .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
@@ -148,8 +153,8 @@ tr.rowlink:hover td { background: color-mix(in srgb, var(--sign) 8%, transparent
     <div class="timeline">
       <label for="yr">Open by</label>
       <button class="btn" id="play" type="button">▶ Play</button>
-      <input id="yr" type="range" min="1942" max="1992" step="1" value="1992">
       <button class="btn step" id="yrprev" type="button" aria-label="Previous year">‹</button>
+      <input id="yr" type="range" min="1942" max="1992" step="1" value="1992">
       <output class="yearout" id="yrout" for="yr">1992</output>
       <button class="btn step" id="yrnext" type="button" aria-label="Next year">›</button>
     </div>
@@ -175,8 +180,8 @@ tr.rowlink:hover td { background: color-mix(in srgb, var(--sign) 8%, transparent
   <section class="panel">
     <details id="reg">
       <summary>Segment register</summary>
-      <p class="sub" style="margin-top:6px">All mapped segments by route. Click a row to find it on the map.</p>
-      <div class="tablewrap"><table><thead><tr><th>Route</th><th>From</th><th>To</th><th>Opened</th><th>Detail</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      <p class="sub" style="margin-top:6px">All mapped segments. Click Route or Opened to sort; click a row to find it on the map.</p>
+      <div class="tablewrap"><table><thead><tr><th aria-sort="ascending"><button class="sortby" data-k="route" type="button">Route</button></th><th>From</th><th>To</th><th><button class="sortby" data-k="year" type="button">Opened</button></th><th>Detail</th></tr></thead><tbody id="tbody"></tbody></table></div>
     </details>
   </section>
 
@@ -401,8 +406,8 @@ function updateStats() {
 /* ---------- register ---------- */
 const ORDER = ["I-69","I-75","I-94","I-96","I-194","I-196","I-275","I-296","I-375","I-475","I-496","I-675","I-696"];
 const tb = $("tbody");
-ORDER.forEach(r => segs.filter(s => s.route === r).forEach(s => {
-  const tr = document.createElement("tr"); tr.className = "rowlink"; tr.tabIndex = 0;
+segs.forEach(s => {
+  const tr = document.createElement("tr"); s.row = tr; tr.className = "rowlink"; tr.tabIndex = 0;
   tr.innerHTML = `<td class="rt">${s.route}</td><td>${s.frm}</td><td>${s.to}</td><td class="yr"><span class="sw" style="background:${s.color}"></span>${s.approx ? "≈" : ""}${s.year}</td><td>${s.note}</td>`;
   const go = () => {
     clearPreset(); const bb = s.el.getBBox(); const pad = Math.max(bb.width, bb.height) * 0.8 + 6;
@@ -412,8 +417,23 @@ ORDER.forEach(r => segs.filter(s => s.route === r).forEach(s => {
     setTimeout(() => { const r = frame.getBoundingClientRect(); showTip(s, { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); }, 520);
   };
   tr.addEventListener("click", go); tr.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
-  tb.appendChild(tr);
+});
+function sortRegister(k, dir) {
+  const byRoute = (a, b) => ORDER.indexOf(a.route) - ORDER.indexOf(b.route);
+  const cmp = k === "year" ? (a, b) => dir * (a.year - b.year) || byRoute(a, b) : byRoute;
+  [...segs].sort(cmp).forEach(s => tb.appendChild(s.row));
+  document.querySelectorAll(".sortby").forEach(b => {
+    const th = b.parentElement;
+    if (b.dataset.k === k) th.setAttribute("aria-sort", dir > 0 ? "ascending" : "descending"); else th.removeAttribute("aria-sort");
+  });
+}
+let regSort = { k: "route", dir: 1 };
+document.querySelectorAll(".sortby").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.k;
+  regSort = { k, dir: regSort.k === k && k === "year" ? -regSort.dir : 1 };
+  sortRegister(regSort.k, regSort.dir);
 }));
+sortRegister("route", 1);
 
 vb = fit(PRESETS.state); setYear(1992);
 </script>
