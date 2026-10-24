@@ -45,7 +45,23 @@ function bulletList(bullets) {
   return ul;
 }
 
-var eras = timelineData.filter(function(d) { return d.type !== 'personal'; });
+// Entries that fall entirely inside an earlier era (an internship during
+// school) ride alongside it instead of taking their own slot in the lane.
+var eras = [];
+var sideTrips = [];
+timelineData.forEach(function(d) {
+  if (d.type === 'personal') return;
+  var r = parseRange(d);
+  for (var i = 0; i < eras.length; i++) {
+    var h = parseRange(eras[i]);
+    if (r.start >= h.start && r.end <= h.end) {
+      sideTrips[i].push(d);
+      return;
+    }
+  }
+  eras.push(d);
+  sideTrips.push([]);
+});
 var family = timelineData.filter(function(d) { return d.type === 'personal'; });
 var anchors = [];
 
@@ -75,9 +91,31 @@ var anchors = [];
 })();
 
 // Career lane
+function sideCard(d, host) {
+  var r = parseRange(d);
+  var box = el('div', 'era-side era-side--' + d.type + ' side-track');
+  box.dataset.start = r.start;
+  box.dataset.end = r.end;
+  var meta = el('div', 'era-meta');
+  meta.appendChild(el('span', 'era-kind', d.type === 'education' ? 'School' : 'Work'));
+  meta.appendChild(el('span', 'era-years', d.years.replace(' - ', ' — ')));
+  meta.appendChild(el('span', 'era-dur', 'While at ' + host.name.split(' ')[0]));
+  box.appendChild(meta);
+  if (d.logo) {
+    var img = el('img', 'era-logo');
+    img.src = d.logo;
+    img.alt = '';
+    box.appendChild(img);
+  }
+  box.appendChild(el('h4', 'era-side-name' + (d.logo ? ' sr-only' : ''), d.name));
+  if (d.role) box.appendChild(el('p', 'era-role', d.role));
+  box.appendChild(bulletList(d.bullets));
+  return box;
+}
+
 (function buildCareer() {
   var career = document.getElementById('career');
-  eras.forEach(function(d) {
+  eras.forEach(function(d, i) {
     var r = parseRange(d);
     var era = el('article', 'era era--' + d.type);
     era.dataset.start = r.start;
@@ -115,6 +153,16 @@ var anchors = [];
     }
 
     card.appendChild(bulletList(d.bullets));
+
+    sideTrips[i].forEach(function(s) {
+      var r2 = parseRange(s);
+      var branch = el('div', 'era-branch era-branch--' + s.type + ' side-track');
+      branch.dataset.start = r2.start;
+      branch.dataset.end = r2.end;
+      era.appendChild(branch);
+      card.appendChild(sideCard(s, d));
+    });
+
     era.appendChild(card);
     career.appendChild(era);
   });
@@ -191,6 +239,12 @@ function layoutTimeline() {
     });
   });
 
+  document.querySelectorAll('.era-branch').forEach(function(branch) {
+    var top = yOf(parseFloat(branch.dataset.start));
+    branch.style.top = (top - branch.parentNode.offsetTop) + 'px';
+    branch.style.height = (yOf(parseFloat(branch.dataset.end)) - top) + 'px';
+  });
+
   var ruler = document.getElementById('ruler');
   ruler.querySelectorAll('.tick').forEach(function(t) { t.remove(); });
   var first = Math.ceil(anchors[0][0]);
@@ -238,6 +292,9 @@ function onTimelineScroll() {
   document.querySelectorAll('.era').forEach(function(era) {
     era.classList.toggle('is-current', year >= +era.dataset.start && year < +era.dataset.end);
   });
+  document.querySelectorAll('.side-track').forEach(function(t) {
+    t.classList.toggle('is-current', year >= +t.dataset.start && year < +t.dataset.end);
+  });
 }
 
 (function wireTimeline() {
@@ -265,6 +322,36 @@ function onTimelineScroll() {
   cards.forEach(function(c) { io.observe(c); });
 })();
 
+
+// "Other stuff" teaser: read the list from other/ so it is maintained in one place
+(function buildElsewhere() {
+  var list = document.getElementById('elsewhereList');
+  if (!list || !window.fetch || !window.DOMParser) return;
+  var base = new URL('other/', location.href);
+  fetch(base).then(function(res) {
+    if (!res.ok) throw new Error(res.status);
+    return res.text();
+  }).then(function(html) {
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('main li > a').forEach(function(a) {
+      var title = a.querySelector('.t');
+      if (!title) return;
+      var desc = a.querySelector('.d');
+      var link = el('a', 'elsewhere-item');
+      link.href = new URL(a.getAttribute('href'), base).href;
+      if (link.host !== location.host) {
+        link.target = '_blank';
+        link.rel = 'noopener';
+      }
+      link.appendChild(el('span', 'elsewhere-title', title.textContent));
+      if (desc) link.appendChild(el('span', 'elsewhere-desc', desc.textContent));
+      link.appendChild(el('span', 'elsewhere-arrow', link.target ? '\u2197' : '\u2192'));
+      var li = el('li');
+      li.appendChild(link);
+      list.appendChild(li);
+    });
+  }).catch(function() {});
+})();
 
 function toggleResumeDropdown() {
   document.getElementById('resumeDropdown').classList.toggle('open');
@@ -332,19 +419,24 @@ function exportText() {
   }
 
   section('Experience');
-  timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
+  resumeEntries('experience').reverse().forEach(entry);
   lines.push('');
   section('Education');
-  timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
+  resumeEntries('education').reverse().forEach(entry);
 
   downloadFile(lines.join('\n'), 'Marc_Santa_Resume.txt', 'text/plain');
 }
 
+// Timeline entries that belong on the downloadable resume
+function resumeEntries(type) {
+  return timelineData.filter(function(d) { return d.type === type && d.resume !== false; });
+}
+
 function exportJSON() {
-  var data = timelineData.map(function(d) {
+  var data = timelineData.filter(function(d) { return d.resume !== false; }).map(function(d) {
     var out = {};
     Object.keys(d).forEach(function(k) {
-      if (k !== 'grow' && k !== 'pdfYears') out[k] = d[k];
+      if (k !== 'grow' && k !== 'pdfYears' && k !== 'resume') out[k] = d[k];
     });
     return out;
   });
@@ -391,9 +483,9 @@ function exportMarkdown() {
   }
 
   section('Experience');
-  timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
+  resumeEntries('experience').reverse().forEach(entry);
   section('Education');
-  timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
+  resumeEntries('education').reverse().forEach(entry);
 
   downloadFile(lines.join('\n'), 'Marc_Santa_Resume.md', 'text/markdown');
 }
@@ -470,9 +562,9 @@ function exportLatex() {
   }
 
   section('Experience');
-  timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
+  resumeEntries('experience').reverse().forEach(entry);
   section('Education');
-  timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
+  resumeEntries('education').reverse().forEach(entry);
 
   lines.push('\\end{document}');
 
@@ -482,39 +574,62 @@ function exportLatex() {
 function exportPDF() {
   if (!window.jspdf) { alert('PDF library still loading, please try again.'); return; }
   var jsPDF = window.jspdf.jsPDF;
-  var doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  var margin = 60;
+  // Render, and if it runs past one page, shrink type and spacing and retry.
+  // Below MIN_SCALE we stop shrinking and let it break onto a second page.
+  var MIN_SCALE = 0.75;
+  var doc;
+  for (var k = 1; ; k -= 0.025) {
+    doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    var fits = renderResumePDF(doc, k, k - 0.025 < MIN_SCALE);
+    if (fits || k - 0.025 < MIN_SCALE) break;
+  }
+  doc.save('Marc_Santa_Resume.pdf');
+}
+
+// Draws the resume at scale k. Returns false as soon as content would run
+// past the bottom of the first page, unless allowBreaks is set.
+function renderResumePDF(doc, k, allowBreaks) {
+  var margin = 54;
   var pageWidth = doc.internal.pageSize.getWidth();
+  var bottom = doc.internal.pageSize.getHeight() - 44;
   var usable = pageWidth - margin * 2;
-  var y = 50;
+  var y = 48;
+  var overflow = false;
+
+  function room(h) {
+    if (y + h <= bottom) return true;
+    if (!allowBreaks) { overflow = true; return false; }
+    doc.addPage();
+    y = 48;
+    return true;
+  }
 
   // Name
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(24);
+  doc.setFontSize(24 * k);
   doc.text('Marc Santa', pageWidth / 2, y, { align: 'center' });
-  y += 18;
+  y += 17 * k;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
+  doc.setFontSize(10 * k);
   doc.setTextColor(100, 100, 100);
   doc.text('Greater Detroit, MI  |  marc.santa@icloud.com |  www.marcsanta.com', pageWidth / 2, y, { align: 'center' });
-  y += 20;
-
-  y += 10;
+  y += 26 * k;
 
   function section(title) {
+    if (!room(30 * k)) return;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
+    doc.setFontSize(12.5 * k);
     doc.setTextColor(40, 40, 40);
     doc.text(title.toUpperCase(), margin, y);
-    y += 5;
+    y += 5 * k;
     doc.setDrawColor(200);
     doc.line(margin, y, pageWidth - margin, y);
-    y += 15;
+    y += 14 * k;
   }
 
   function renderBullets(bullets) {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(10 * k);
     doc.setTextColor(50, 50, 50);
     bullets.forEach(function(b) {
       var isSub = b.charCodeAt(0) === 0x25aa;
@@ -522,62 +637,57 @@ function exportPDF() {
       var indent = isSub ? margin + 24 : margin + 10;
       var lines = doc.splitTextToSize(text, usable - (isSub ? 24 : 10));
       lines.forEach(function(line) {
-        if (y > 720) { doc.addPage(); y = 50; }
+        if (!room(14 * k)) return;
         doc.text(line, indent, y);
-        y += 16;
+        y += 14 * k;
       });
     });
   }
 
+  function roleLine(role, years) {
+    if (!room(15 * k)) return;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10 * k);
+    doc.setTextColor(60, 60, 60);
+    doc.text(role, margin, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(years || '', pageWidth - margin, y, { align: 'right' });
+    y += 15 * k;
+  }
+
   function entry(d) {
-    var dateStr = d.pdfYears || d.years;
+    if (!room(30 * k)) return;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(11 * k);
     doc.setTextColor(30, 30, 30);
+    doc.text(d.name, margin, y);
+    y += 15 * k;
     if (d.pdfSections) {
       // Multi-role: date on each role line
-      doc.text(d.name, margin, y);
-      y += 17;
       d.pdfSections.forEach(function(s) {
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(10);
-        doc.setTextColor(60, 60, 60);
-        doc.text(s.role, margin, y);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 100, 100);
-        doc.text(s.years || '', pageWidth - margin, y, { align: 'right' });
-        y += 17;
+        roleLine(s.role, s.years);
         renderBullets(s.bullets);
+        y += 3 * k;
       });
     } else {
       // Single role: date on role line
-      doc.text(d.name, margin, y);
-      y += 17;
       var role = d.pdfRole || d.role;
-      if (role) {
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(10);
-        doc.setTextColor(60, 60, 60);
-        doc.text(role, margin, y);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 100, 100);
-        doc.text(dateStr, pageWidth - margin, y, { align: 'right' });
-        y += 17;
-      }
+      if (role) roleLine(role, d.pdfYears || d.years);
       renderBullets(d.bullets);
     }
-    y += 16;
+    y += 11 * k;
   }
 
   // Experience (reverse chronological)
   section('Experience');
-  timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
+  resumeEntries('experience').reverse().forEach(entry);
 
   // Education (reverse chronological)
   section('Education');
-  timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
+  resumeEntries('education').reverse().forEach(entry);
 
-  doc.save('Marc_Santa_Resume.pdf');
+  return !overflow;
 }
 
 function exportWord() {
@@ -662,9 +772,9 @@ function exportWord() {
   }
 
   sectionHeader('Experience');
-  timelineData.filter(function(d) { return d.type === 'experience'; }).reverse().forEach(entry);
+  resumeEntries('experience').reverse().forEach(entry);
   sectionHeader('Education');
-  timelineData.filter(function(d) { return d.type === 'education'; }).reverse().forEach(entry);
+  resumeEntries('education').reverse().forEach(entry);
 
   var resumeDoc = new D.Document({ sections: [{ properties: {}, children: paras }] });
   D.Packer.toBlob(resumeDoc).then(function(blob) {

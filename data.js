@@ -3,6 +3,7 @@ var timelineData = [
     name: 'Clio High School',
     years: '2000 - 2004',
     type: 'education',
+    resume: false,
     grow: 4,
     bullets: [
       'High honors, 3.8 GPA.',
@@ -19,6 +20,19 @@ var timelineData = [
     bullets: [
       'President of WKUF-LP 94.3FM radio station.',
       'Computer Engineering Minor.'
+    ]
+  },
+  {
+    name: 'Frankenmuth Insurance',
+    logo: 'images/frankenmuth.svg',
+    years: '2005 - 2008',
+    role: 'Intern',
+    type: 'experience',
+    // TODO: placeholder bullets, replace with real responsibilities
+    bullets: [
+      'Supported day-to-day IT operations for the home office.',
+      'Wrote scripts to automate routine system administration tasks.',
+      'Assisted the network team with equipment upgrades and installs.'
     ]
   },
   {
