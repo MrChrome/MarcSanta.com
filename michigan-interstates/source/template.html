@@ -186,7 +186,7 @@ const $ = (id) => document.getElementById(id);
 const svg = $("map"), frame = $("frame"), tip = $("tip");
 
 /* ---------- color ramp by year ---------- */
-const STOPS = [[1942,[96,58,150]],[1953,[49,99,186]],[1959,[20,140,160]],[1963,[60,160,85]],[1968,[200,165,20]],[1974,[228,112,40]],[1985,[205,55,70]],[1992,[150,30,90]]];
+const STOPS = [[1942,[245,210,0]],[1956,[245,195,0]],[1960,[242,160,0]],[1964,[230,118,0]],[1975,[195,82,0]],[1992,[150,52,0]]];
 function color(y) {
   for (let i = 1; i < STOPS.length; i++) {
     const [y1,c1] = STOPS[i-1], [y2,c2] = STOPS[i];
@@ -230,7 +230,7 @@ function showTip(s, e) {
   if (hotSeg) hotSeg.el.classList.remove("hot");
   hotSeg = s; s.el.classList.add("hot"); s.el.parentNode.appendChild(s.el);
   const to = s.to ? ` to ${s.to}` : "";
-  tip.innerHTML = `<div class="r"><span>${s.route}</span><span class="y" style="color:${s.color}">${s.approx ? "≈" : ""}${s.year}</span></div>
+  tip.innerHTML = `<div class="r"><span>${s.route}</span><span class="y"><span class="sw" style="background:${s.color}"></span>${s.approx ? "≈" : ""}${s.year}</span></div>
     <div>${s.frm}${to}</div><div class="n">${s.note}</div><div class="n">≈ ${s.miles.toFixed(1)} mi</div>${s.approx ? '<span class="ap">Year approximate</span>' : ""}`;
   tip.hidden = false; moveTip(e);
 }
