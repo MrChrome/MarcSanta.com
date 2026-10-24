@@ -186,7 +186,7 @@ const $ = (id) => document.getElementById(id);
 const svg = $("map"), frame = $("frame"), tip = $("tip");
 
 /* ---------- color ramp by year ---------- */
-const STOPS = [[1942,[245,210,0]],[1956,[245,195,0]],[1960,[242,160,0]],[1964,[230,118,0]],[1975,[195,82,0]],[1992,[150,52,0]]];
+const STOPS = [[1942,[255,232,95]],[1956,[255,214,40]],[1960,[250,170,10]],[1964,[240,118,0]],[1975,[215,58,12]],[1992,[175,14,22]]];
 function color(y) {
   for (let i = 1; i < STOPS.length; i++) {
     const [y1,c1] = STOPS[i-1], [y2,c2] = STOPS[i];
