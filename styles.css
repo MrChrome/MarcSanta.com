@@ -624,35 +624,83 @@ h1 em {
   border-left: 1px solid var(--line);
 }
 
-.era-steps li {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.3rem 0 0.3rem 1rem;
-  color: var(--muted);
-  font-size: 0.9375rem;
+.era-steps:last-child {
+  margin-bottom: 0;
 }
 
-.era-steps li::before {
+.era-steps > li {
+  position: relative;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  transition: color 0.3s;
+}
+
+.era-steps > li::before {
   content: "";
   position: absolute;
   left: -4px;
-  top: 50%;
+  top: 0.95rem;
   width: 7px;
   height: 7px;
   margin-top: -3.5px;
   border-radius: 50%;
   background: var(--line);
+  transition: background 0.3s;
 }
 
-.era-steps li.is-now {
-  color: var(--ink);
+.era-steps > li.is-now .step-role {
   font-weight: 600;
 }
 
-.era-steps li.is-now::before {
+.era-steps > li.is-open {
+  color: var(--ink);
+}
+
+.era-steps > li.is-open::before {
   background: var(--work);
+}
+
+.step-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.35rem 0 0.35rem 1rem;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.step-head:hover .step-role {
+  color: var(--ink);
+}
+
+/* Bullets for a role slide open when it is the open step */
+.step-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.step-body > .era-bullets {
+  min-height: 0;
+  overflow: hidden;
+  padding-left: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.era-steps > li.is-open .step-body {
+  grid-template-rows: 1fr;
+}
+
+.era-steps > li.is-open .step-body > .era-bullets {
+  opacity: 1;
+  padding-bottom: 0.6rem;
 }
 
 .step-years {
@@ -743,6 +791,45 @@ h1 em {
   border-radius: 50%;
   background: var(--bg);
   border: 3px solid var(--life);
+}
+
+.branch-photo {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--life);
+  box-shadow: 0 0 0 4px var(--bg);
+  z-index: 1;
+  cursor: zoom-in;
+  outline: none;
+  transform-origin: 0 50%;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s;
+}
+
+/* Hovering the photo or name blows the photo up over the label */
+.branch.has-photo:hover .branch-photo,
+.branch-photo:focus {
+  transform: scale(3);
+  box-shadow: 0 0 0 2px var(--bg), 0 20px 40px -12px rgba(0, 0, 0, 0.7);
+  z-index: 5;
+}
+
+.branch.has-photo:hover .branch-label,
+.branch-photo:focus ~ .branch-label {
+  opacity: 0;
+}
+
+.branch.has-photo::before {
+  content: none;
+}
+
+.branch.has-photo .branch-label {
+  left: 40px;
 }
 
 .branch-label {
@@ -1067,7 +1154,7 @@ h1 em {
     font-size: 1.85rem;
   }
 
-  .era-steps li {
+  .step-head {
     flex-direction: column;
     gap: 0;
   }
@@ -1108,7 +1195,30 @@ h1 em {
 
   /* Labels run down the branch so they fit the narrow lane */
   .branch {
-    left: calc(14px + var(--i) * 18px);
+    left: calc(16px + var(--i) * 18px);
+  }
+
+  .branch-photo {
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border-width: 2px;
+    box-shadow: 0 0 0 3px var(--bg);
+  }
+
+  /* Grow toward the card so it stays on screen */
+  .branch-photo {
+    transform-origin: 100% 0;
+  }
+
+  .branch.has-photo:hover .branch-photo,
+  .branch-photo:focus {
+    transform: scale(4);
+  }
+
+  .branch.has-photo .branch-label {
+    left: 4px;
+    top: 22px;
   }
 
   .branch-label {

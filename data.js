@@ -107,6 +107,7 @@ var timelineData = [
   },
   {
     name: 'Peter Santa',
+    photo: 'images/peter.jpg',
     years: '2023',
     type: 'personal',
     fork: true,
@@ -120,6 +121,7 @@ var timelineData = [
   },
   {
     name: 'Audrey Santa',
+    photo: 'images/audrey.jpg',
     years: '2026',
     type: 'personal',
     fork: true,

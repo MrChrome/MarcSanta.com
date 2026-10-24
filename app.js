@@ -139,20 +139,28 @@ function sideCard(d, host) {
     card.appendChild(el('h3', 'era-name' + (d.logo ? ' sr-only' : ''), d.name));
 
     if (d.pdfSections) {
-      // Promotions, oldest first, newest highlighted
+      // Promotions, oldest first. Scrolling through the era opens the role
+      // held in that year (see onTimelineScroll); clicking a role opens it too.
       var steps = el('ol', 'era-steps');
       d.pdfSections.slice().reverse().forEach(function(s, i, all) {
         var li = el('li', i === all.length - 1 ? 'is-now' : null);
-        li.appendChild(el('span', 'step-role', s.role));
-        li.appendChild(el('span', 'step-years', s.years.replace('Present', 'Today').replace(' - ', ' — ')));
+        li.dataset.start = parseInt(s.years, 10);
+        var head = el('button', 'step-head');
+        head.type = 'button';
+        head.appendChild(el('span', 'step-role', s.role));
+        head.appendChild(el('span', 'step-years', s.years.replace('Present', 'Today').replace(' - ', ' — ')));
+        head.addEventListener('click', function() { openStep(li); });
+        li.appendChild(head);
+        var body = el('div', 'step-body');
+        body.appendChild(bulletList(s.bullets));
+        li.appendChild(body);
         steps.appendChild(li);
       });
       card.appendChild(steps);
-    } else if (d.role) {
-      card.appendChild(el('p', 'era-role', d.role));
+    } else {
+      if (d.role) card.appendChild(el('p', 'era-role', d.role));
+      card.appendChild(bulletList(d.bullets));
     }
-
-    card.appendChild(bulletList(d.bullets));
 
     sideTrips[i].forEach(function(s) {
       var r2 = parseRange(s);
@@ -182,6 +190,14 @@ function sideCard(d, host) {
     var branch = el('div', 'branch');
     branch.style.setProperty('--i', i);
     branch.dataset.start = parseRange(d).start;
+    if (d.photo) {
+      var photo = el('img', 'branch-photo');
+      photo.src = d.photo;
+      photo.alt = d.name;
+      photo.tabIndex = 0;
+      branch.classList.add('has-photo');
+      branch.appendChild(photo);
+    }
     var label = el('div', 'branch-label');
     label.appendChild(el('span', 'branch-name', d.name));
     label.appendChild(el('span', 'branch-date', MONTHS[birth.getMonth()] + ' ' + birth.getFullYear()));
@@ -190,6 +206,12 @@ function sideCard(d, host) {
     life.appendChild(branch);
   });
 })();
+
+function openStep(li) {
+  Array.prototype.forEach.call(li.parentNode.children, function(step) {
+    step.classList.toggle('is-open', step === li);
+  });
+}
 
 function yOf(year) {
   for (var i = 0; i < anchors.length - 1; i++) {
@@ -291,6 +313,13 @@ function onTimelineScroll() {
   });
   document.querySelectorAll('.era').forEach(function(era) {
     era.classList.toggle('is-current', year >= +era.dataset.start && year < +era.dataset.end);
+  });
+  document.querySelectorAll('.era-steps').forEach(function(list) {
+    var steps = list.children, pick = steps[0];
+    for (var i = 0; i < steps.length; i++) {
+      if (year >= +steps[i].dataset.start) pick = steps[i];
+    }
+    openStep(pick);
   });
   document.querySelectorAll('.side-track').forEach(function(t) {
     t.classList.toggle('is-current', year >= +t.dataset.start && year < +t.dataset.end);
