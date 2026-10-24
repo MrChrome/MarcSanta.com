@@ -246,16 +246,30 @@ h1 {
   z-index: 1000;
 }
 
-.github-link {
+.corner-links {
   position: fixed;
   bottom: 1.25rem;
   right: 1.25rem;
-  color: #475569;
-  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   z-index: 1000;
 }
 
-.github-link:hover {
+.github-link,
+.other-link {
+  display: flex;
+  color: #475569;
+  transition: color 0.2s;
+}
+
+.other-link {
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.github-link:hover,
+.other-link:hover {
   color: #94a3b8;
 }
 
