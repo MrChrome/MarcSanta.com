@@ -28,7 +28,6 @@ var timelineData = [
     years: '2005 - 2008',
     role: 'Intern',
     type: 'experience',
-    // TODO: placeholder bullets, replace with real responsibilities
     bullets: [
       'Supported day-to-day IT operations for the home office.',
       'Wrote scripts to automate routine system administration tasks.',
