@@ -57,7 +57,9 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .timeline { display: flex; align-items: center; gap: 10px; flex: 1 1 340px; min-width: 0; }
 .timeline label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
 .timeline input { flex: 1; min-width: 0; accent-color: var(--sign); }
-.yearout { font: 600 22px var(--font-data); font-variant-numeric: tabular-nums; min-width: 4ch; }
+.yearout { font: 600 22px var(--font-data); font-variant-numeric: tabular-nums; min-width: 4ch; text-align: center; }
+.timeline .step { flex: none; padding-inline: 10px; font-size: 18px; line-height: 1; }
+.timeline .step:disabled { opacity: .35; cursor: default; border-color: var(--rule); }
 
 .mapframe { position: relative; background: var(--water); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden;
   height: min(78vh, 860px); min-height: 420px; touch-action: none; }
@@ -138,7 +140,9 @@ tr.rowlink:hover td { background: color-mix(in srgb, var(--sign) 8%, transparent
       <label for="yr">Open by</label>
       <button class="btn" id="play" type="button">▶ Play</button>
       <input id="yr" type="range" min="1942" max="1992" step="1" value="1992">
+      <button class="btn step" id="yrprev" type="button" aria-label="Previous year">‹</button>
       <output class="yearout" id="yrout" for="yr">1992</output>
+      <button class="btn step" id="yrnext" type="button" aria-label="Next year">›</button>
     </div>
   </div>
 
@@ -345,10 +349,13 @@ new ResizeObserver(() => { vb = fit(vb); apply(); }).observe(frame);
 /* ---------- timeline ---------- */
 function setYear(y) {
   yearCut = y; $("yr").value = y; $("yrout").textContent = y;
+  $("yrprev").disabled = y <= 1942; $("yrnext").disabled = y >= 1992;
   segs.forEach(s => { const f = s.year > y; s.el.classList.toggle("future", f); s.hit.style.pointerEvents = f ? "none" : ""; });
   drawChart(); updateStats(); apply();
 }
 $("yr").addEventListener("input", (e) => { stopPlay(); setYear(+e.target.value); });
+$("yrprev").onclick = () => { stopPlay(); setYear(Math.max(1942, yearCut - 1)); };
+$("yrnext").onclick = () => { stopPlay(); setYear(Math.min(1992, yearCut + 1)); };
 let playT = null;
 function stopPlay() { if (playT) { clearInterval(playT); playT = null; $("play").textContent = "▶ Play"; } }
 $("play").onclick = () => {
