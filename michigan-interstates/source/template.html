@@ -1,0 +1,403 @@
+<title>Michigan Interstates by Year Opened</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&family=Overpass+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: road-atlas sheet — title block, control strip, full-width zoomable map, then mileage-by-year chart and the segment register. */
+:root {
+  --bg: #f3f5f4;
+  --paper: #fbfcfb;
+  --ink: #17221f;
+  --muted: #5b6a66;
+  --rule: #d5dcda;
+  --water: #cfe0e6;
+  --land: #fbfcfa;
+  --land-out: #e7ebe8;
+  --border: #9aa8a4;
+  --sign: #0b6e4f;          /* MDOT guide-sign green */
+  --sign-ink: #ffffff;
+  --shield-red: #b3262f;
+  --shield-blue: #1f3f8f;
+  --halo: #fbfcfa;
+  --faded: #c8cfcd;
+  --font-display: "Overpass", "Highway Gothic", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Overpass", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "Overpass Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111816; --paper: #161f1c; --ink: #e4ebe8; --muted: #93a39e; --rule: #2a3632;
+  --water: #0f2530; --land: #242f2b; --land-out: #161d1b; --border: #4d5d58;
+  --sign: #138a64; --sign-ink: #ffffff; --halo: #242f2b; --faded: #34413d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111816; --paper: #161f1c; --ink: #e4ebe8; --muted: #93a39e; --rule: #2a3632;
+  --water: #0f2530; --land: #242f2b; --land-out: #161d1b; --border: #4d5d58;
+  --sign: #138a64; --sign-ink: #ffffff; --halo: #242f2b; --faded: #34413d; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
+
+header.sign { background: var(--sign); color: var(--sign-ink); border-radius: 10px; padding: 18px 22px 16px;
+  box-shadow: inset 0 0 0 3px var(--sign), inset 0 0 0 5px rgba(255,255,255,.85); display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.shields { display: flex; gap: 6px; flex: none; }
+.shields svg { width: 44px; height: 46px; }
+header h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(24px, 3.4vw, 36px); line-height: 1.05; margin: 0; letter-spacing: .005em; text-wrap: balance; }
+header p { margin: 4px 0 0; font-size: 14px; opacity: .92; max-width: 70ch; }
+.titleblock { min-width: 0; flex: 1 1 320px; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button, .btn { font: 600 13px var(--font-body); color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
+  border-radius: 999px; padding: 6px 12px 4px; cursor: pointer; }
+.presets button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.presets button:hover, .btn:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--sign); outline-offset: 2px; }
+.timeline { display: flex; align-items: center; gap: 10px; flex: 1 1 340px; min-width: 0; }
+.timeline label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
+.timeline input { flex: 1; min-width: 0; accent-color: var(--sign); }
+.yearout { font: 600 22px var(--font-data); font-variant-numeric: tabular-nums; min-width: 4ch; }
+
+.mapframe { position: relative; background: var(--water); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden;
+  height: min(78vh, 860px); min-height: 420px; touch-action: none; }
+.mapframe svg { width: 100%; height: 100%; display: block; cursor: grab; user-select: none; -webkit-user-select: none; }
+.mapframe svg.dragging { cursor: grabbing; }
+.land-out { fill: var(--land-out); stroke: var(--border); stroke-width: .6; vector-effect: non-scaling-stroke; }
+.land-mi { fill: var(--land); stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.lake { fill: var(--water); stroke: var(--border); stroke-width: .5; vector-effect: non-scaling-stroke; }
+.seg { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-width: 4.5; transition: opacity .25s, stroke .25s; }
+.seg-hit { fill: none; stroke: transparent; stroke-width: 18; vector-effect: non-scaling-stroke; cursor: pointer; pointer-events: stroke; }
+.seg.future { stroke: var(--faded) !important; stroke-width: 2.5; }
+.seg.hot { stroke-width: 8; }
+.casing { fill: none; stroke: var(--halo); stroke-width: 7.5; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.ylabel { font-family: var(--font-data); font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--halo); stroke-linejoin: round; pointer-events: none; }
+.city { font-family: var(--font-body); fill: var(--muted); font-style: italic; paint-order: stroke; stroke: var(--land); pointer-events: none; }
+.citydot { fill: var(--muted); }
+.zoombtns { position: absolute; right: 10px; top: 10px; display: grid; gap: 4px; }
+.zoombtns button { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font: 600 18px var(--font-body); cursor: pointer; }
+.hint { position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--paper) 85%, transparent); padding: 2px 8px; border-radius: 4px; }
+.tip { position: absolute; pointer-events: none; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 10px 12px; font-size: 13px; line-height: 1.4; max-width: 280px; box-shadow: 0 6px 22px rgba(0,0,0,.18); z-index: 5; }
+.tip .r { font: 800 15px var(--font-display); display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.tip .y { font: 600 18px var(--font-data); }
+.tip .n { color: var(--muted); margin-top: 4px; }
+.tip .ap { display: inline-block; margin-top: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border: 1px dashed var(--muted); border-radius: 4px; padding: 1px 6px; }
+
+.panel { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+.panel h2 { font: 800 18px var(--font-display); margin: 0 0 2px; }
+.panel .sub { color: var(--muted); font-size: 13px; margin: 0 0 10px; max-width: 75ch; }
+.chartwrap { overflow-x: auto; }
+#chart { display: block; width: 100%; min-width: 560px; height: 190px; }
+#chart text { font-family: var(--font-data); font-size: 10px; fill: var(--muted); }
+#chart .bar { cursor: pointer; }
+#chart .grid { stroke: var(--rule); }
+.legendramp { display: flex; align-items: center; gap: 10px; font: 12px var(--font-data); color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+.legendramp .ramp { height: 10px; flex: 1 1 240px; border-radius: 3px; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 13px; color: var(--muted); margin-top: 10px; }
+.stats b { color: var(--ink); font: 600 14px var(--font-data); }
+
+details summary { cursor: pointer; font: 800 18px var(--font-display); }
+.tablewrap { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 10px 5px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+td.yr { font: 600 13px var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.rt { font-weight: 800; white-space: nowrap; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+tr.rowlink { cursor: pointer; }
+tr.rowlink:hover td { background: color-mix(in srgb, var(--sign) 8%, transparent); }
+.notes { font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 90ch; }
+.notes a { color: var(--sign); }
+@media (max-width: 560px) { .mapframe { height: 72vh; } header.sign { padding: 14px 16px; } .shields svg { width: 36px; height: 38px; } }
+@media (prefers-reduced-motion: reduce) { .seg { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="sign">
+    <div class="shields" aria-hidden="true">
+      <svg viewBox="0 0 44 46"><path d="M3 4 Q22 0 41 4 L41 14 Q41 36 22 44 Q3 36 3 14Z" fill="#fff"/><path d="M5.5 6 Q22 2.8 38.5 6 L38.5 13 L5.5 13Z" fill="var(--shield-red)"/><path d="M5.5 15 L38.5 15 Q38 34 22 41.5 Q6 34 5.5 15Z" fill="var(--shield-blue)"/><text x="22" y="34" text-anchor="middle" font-family="Overpass, sans-serif" font-weight="800" font-size="16" fill="#fff">75</text></svg>
+      <svg viewBox="0 0 44 46"><path d="M3 4 Q22 0 41 4 L41 14 Q41 36 22 44 Q3 36 3 14Z" fill="#fff"/><path d="M5.5 6 Q22 2.8 38.5 6 L38.5 13 L5.5 13Z" fill="var(--shield-red)"/><path d="M5.5 15 L38.5 15 Q38 34 22 41.5 Q6 34 5.5 15Z" fill="var(--shield-blue)"/><text x="22" y="34" text-anchor="middle" font-family="Overpass, sans-serif" font-weight="800" font-size="16" fill="#fff">94</text></svg>
+    </div>
+    <div class="titleblock">
+      <h1>Michigan Interstates by Year Opened</h1>
+      <p>Every Interstate segment in Michigan, colored and labeled with the year it first carried traffic as a freeway, whatever number it was signed under at the time. Hover or tap a segment for exact dates.</p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="presets" role="group" aria-label="Zoom to region">
+      <button id="p-state" aria-pressed="true" data-v="state">Statewide</button>
+      <button id="p-det" aria-pressed="false" data-v="det">Metro Detroit</button>
+      <button id="p-core" aria-pressed="false" data-v="core">Detroit core</button>
+      <button id="p-gr" aria-pressed="false" data-v="gr">Grand Rapids–Lansing</button>
+      <button id="p-fl" aria-pressed="false" data-v="fl">Flint–Saginaw</button>
+      <button id="p-up" aria-pressed="false" data-v="up">Straits &amp; U.P.</button>
+    </div>
+    <div class="timeline">
+      <label for="yr">Open by</label>
+      <button class="btn" id="play" type="button">▶ Play</button>
+      <input id="yr" type="range" min="1942" max="1992" step="1" value="1992">
+      <output class="yearout" id="yrout" for="yr">1992</output>
+    </div>
+  </div>
+
+  <div class="mapframe" id="frame">
+    <svg id="map" role="img" aria-label="Map of Michigan Interstate highways colored by year each segment opened">
+      <g id="base"></g><g id="cas"></g><g id="segs"></g><g id="hits"></g><g id="cities"></g><g id="labels"></g>
+    </svg>
+    <div class="zoombtns"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button></div>
+    <div class="hint">Scroll or pinch to zoom · drag to pan · ≈ = year approximate</div>
+    <div class="tip" id="tip" hidden></div>
+  </div>
+
+  <section class="panel">
+    <h2>Miles opened per year</h2>
+    <p class="sub">Approximate centerline miles, measured on the map geometry. Click a bar to set the timeline to that year. The 1957 to 1964 surge follows the 1956 Federal-Aid Highway Act; the long tail is urban freeways and the I-69 gaps around Lansing.</p>
+    <div class="chartwrap"><svg id="chart" viewBox="0 0 900 190" preserveAspectRatio="none"></svg></div>
+    <div class="legendramp"><span>1942</span><div class="ramp" id="ramp"></div><span>1992</span></div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="panel">
+    <details id="reg">
+      <summary>Segment register</summary>
+      <p class="sub" style="margin-top:6px">All mapped segments by route. Click a row to find it on the map.</p>
+      <div class="tablewrap"><table><thead><tr><th>Route</th><th>From</th><th>To</th><th>Opened</th><th>Detail</th></tr></thead><tbody id="tbody"></tbody></table></div>
+    </details>
+  </section>
+
+  <section class="notes">
+    <div><b>How years are assigned.</b> Each segment shows the year it first opened to traffic as a full freeway, even if it was signed US 12, US 16, US 23, US 27, M-21, M-76 or M-78 at the time and became an Interstate later. Where one roadway opened before the other, the note says so. Segments marked ≈ have no exact date in the sources and use the best-supported year.</div>
+    <div><b>Sources.</b> Opening dates from Christopher Bessert's <a href="https://michiganhighways.org/listings/I-075.html" target="_blank" rel="noopener">Michigan Highways</a> route histories (I-75, I-94, I-96, I-69, I-275) and Wikipedia's route articles for <a href="https://en.wikipedia.org/wiki/Interstate_196" target="_blank" rel="noopener">I-196</a>, <a href="https://en.wikipedia.org/wiki/Interstate_696" target="_blank" rel="noopener">I-696</a>, <a href="https://en.wikipedia.org/wiki/Interstate_475_(Michigan)" target="_blank" rel="noopener">I-475</a>, <a href="https://en.wikipedia.org/wiki/Interstate_675_(Michigan)" target="_blank" rel="noopener">I-675</a>, <a href="https://en.wikipedia.org/wiki/Interstate_496" target="_blank" rel="noopener">I-496</a>, <a href="https://en.wikipedia.org/wiki/Interstate_194_(Michigan)" target="_blank" rel="noopener">I-194</a>, <a href="https://en.wikipedia.org/wiki/Interstate_296" target="_blank" rel="noopener">I-296</a> and <a href="https://en.wikipedia.org/wiki/Interstate_375_(Michigan)" target="_blank" rel="noopener">I-375</a>. Highway lines from Natural Earth's North America roads layer, split at interchange coordinates, so segment breaks are accurate to roughly a mile. I-296 is drawn schematically.</div>
+  </section>
+</div>
+
+<script>
+const DATA = __DATA__;
+const NS = "http://www.w3.org/2000/svg";
+const $ = (id) => document.getElementById(id);
+const svg = $("map"), frame = $("frame"), tip = $("tip");
+
+/* ---------- color ramp by year ---------- */
+const STOPS = [[1942,[96,58,150]],[1953,[49,99,186]],[1959,[20,140,160]],[1963,[60,160,85]],[1968,[200,165,20]],[1974,[228,112,40]],[1985,[205,55,70]],[1992,[150,30,90]]];
+function color(y) {
+  for (let i = 1; i < STOPS.length; i++) {
+    const [y1,c1] = STOPS[i-1], [y2,c2] = STOPS[i];
+    if (y <= y2) { const t = Math.max(0, (y - y1) / (y2 - y1)); return `rgb(${c1.map((v,k)=>Math.round(v+(c2[k]-v)*t)).join(",")})`; }
+  }
+  return `rgb(${STOPS.at(-1)[1].join(",")})`;
+}
+$("ramp").style.background = `linear-gradient(90deg, ${STOPS.map(([y])=>`${color(y)} ${((y-1942)/50*100).toFixed(1)}%`).join(",")})`;
+
+/* ---------- base map ---------- */
+const B = DATA.base;
+function addPath(g, d, cls) { const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("class", cls); g.appendChild(p); return p; }
+addPath($("base"), B.neighbors, "land-out");
+addPath($("base"), B.michigan, "land-mi");
+addPath($("base"), B.lakes, "lake");
+
+const segs = DATA.segments;
+const MI_PER_UNIT = 69.0 / 100;  // 100 svg units per degree of latitude
+segs.forEach((s) => {
+  s.miles = s.len * MI_PER_UNIT;
+  s.color = color(s.year);
+  addPath($("cas"), s.d, "casing");
+  s.el = addPath($("segs"), s.d, "seg"); s.el.style.stroke = s.color;
+  s.hit = addPath($("hits"), s.d, "seg-hit");
+  const L = s.el.getTotalLength(); const m = s.el.getPointAtLength(L / 2); s.lx = m.x; s.ly = m.y;
+  s.hit.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") showTip(s, e); });
+  s.hit.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") moveTip(e); });
+  s.hit.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") hideTip(); });
+  s.hit.addEventListener("click", (e) => { if (!moved) { showTip(s, e); e.stopPropagation(); } });
+  const t = document.createElementNS(NS, "text"); t.setAttribute("class", "ylabel"); t.setAttribute("text-anchor", "middle");
+  t.textContent = (s.approx ? "≈" : "") + s.year; $("labels").appendChild(t); s.lab = t;
+});
+B.cities.forEach((c) => {
+  const dot = document.createElementNS(NS, "circle"); dot.setAttribute("class", "citydot"); dot.setAttribute("cx", c.x); dot.setAttribute("cy", c.y); $("cities").appendChild(dot); c.dot = dot;
+  const t = document.createElementNS(NS, "text"); t.setAttribute("class", "city"); t.textContent = c.n; $("cities").appendChild(t); c.t = t;
+});
+
+/* ---------- tooltip ---------- */
+let hotSeg = null;
+function showTip(s, e) {
+  if (hotSeg) hotSeg.el.classList.remove("hot");
+  hotSeg = s; s.el.classList.add("hot"); s.el.parentNode.appendChild(s.el);
+  const to = s.to ? ` to ${s.to}` : "";
+  tip.innerHTML = `<div class="r"><span>${s.route}</span><span class="y" style="color:${s.color}">${s.approx ? "≈" : ""}${s.year}</span></div>
+    <div>${s.frm}${to}</div><div class="n">${s.note}</div><div class="n">≈ ${s.miles.toFixed(1)} mi</div>${s.approx ? '<span class="ap">Year approximate</span>' : ""}`;
+  tip.hidden = false; moveTip(e);
+}
+function moveTip(e) {
+  const r = frame.getBoundingClientRect(); let x = e.clientX - r.left + 14, y = e.clientY - r.top + 14;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  if (x + w > r.width - 8) x = e.clientX - r.left - w - 14; if (x < 8) x = 8;
+  if (y + h > r.height - 8) y = e.clientY - r.top - h - 14; if (y < 8) y = 8;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.hidden = true; if (hotSeg) { hotSeg.el.classList.remove("hot"); hotSeg = null; } }
+svg.addEventListener("click", () => { if (!moved) hideTip(); });
+
+/* ---------- view box, pan & zoom ---------- */
+const FULL = { x: B.viewBox[0], y: B.viewBox[1], w: B.viewBox[2], h: B.viewBox[3] };
+const K = Math.cos(44.5 * Math.PI / 180);
+const P = (lon, lat) => [(lon + 90.6) * K * 100, (48.4 - lat) * 100];
+function box(lon0, lat0, lon1, lat1) { const [x0, y0] = P(lon0, lat1), [x1, y1] = P(lon1, lat0); return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }; }
+const PRESETS = {
+  state: box(-88.2, 41.6, -82.3, 46.6),
+  det: box(-83.75, 41.95, -82.75, 42.72),
+  core: box(-83.27, 42.27, -82.95, 42.52),
+  gr: box(-86.3, 42.55, -84.35, 43.2),
+  fl: box(-84.1, 42.85, -83.25, 43.75),
+  up: box(-85.0, 45.3, -84.1, 46.55),
+};
+let vb = { ...PRESETS.state };
+function fit(target) {  // expand target box to the frame aspect ratio
+  const r = svg.getBoundingClientRect(); const ar = r.width / r.height; let { x, y, w, h } = target;
+  if (w / h < ar) { const nw = h * ar; x -= (nw - w) / 2; w = nw; } else { const nh = w / ar; y -= (nh - h) / 2; h = nh; }
+  return { x, y, w, h };
+}
+let raf = 0;
+function apply() {
+  svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(layoutLabels);
+}
+function animateTo(target) {
+  const from = { ...vb }, to = fit(target), t0 = performance.now(), D = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450;
+  function step(now) {
+    const t = D ? Math.min(1, (now - t0) / D) : 1; const e = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+    vb = { x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, w: from.w + (to.w - from.w) * e, h: from.h + (to.h - from.h) * e };
+    apply(); if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function setPreset(k) { document.querySelectorAll(".presets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === k)); animateTo(PRESETS[k]); }
+document.querySelectorAll(".presets button").forEach(b => b.addEventListener("click", () => setPreset(b.dataset.v)));
+function clearPreset() { document.querySelectorAll(".presets button").forEach(b => b.setAttribute("aria-pressed", "false")); }
+
+function zoomAt(cx, cy, f) {  // cx, cy in client px
+  const r = svg.getBoundingClientRect(); const px = vb.x + (cx - r.left) / r.width * vb.w, py = vb.y + (cy - r.top) / r.height * vb.h;
+  const nw = Math.min(FULL.w * 1.2, Math.max(8, vb.w * f)), k = nw / vb.w;
+  vb = { x: px - (px - vb.x) * k, y: py - (py - vb.y) * k, w: nw, h: vb.h * k }; apply(); clearPreset();
+}
+svg.addEventListener("wheel", (e) => { e.preventDefault(); hideTip(); zoomAt(e.clientX, e.clientY, Math.exp(e.deltaY * (e.deltaMode ? 0.05 : 0.0015))); }, { passive: false });
+$("zin").onclick = () => { const r = svg.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 0.67); };
+$("zout").onclick = () => { const r = svg.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.5); };
+
+const ptrs = new Map(); let moved = false, start = null;
+svg.addEventListener("pointerdown", (e) => {
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = false;
+  start = { vb: { ...vb }, pts: [...ptrs.values()].map(p => ({ ...p })) };
+  svg.setPointerCapture(e.pointerId); svg.classList.add("dragging");
+});
+svg.addEventListener("pointermove", (e) => {
+  if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const r = svg.getBoundingClientRect(), pts = [...ptrs.values()];
+  if (pts.length === 1 && start.pts.length === 1) {
+    const dx = pts[0].x - start.pts[0].x, dy = pts[0].y - start.pts[0].y;
+    if (Math.hypot(dx, dy) > 4) { moved = true; hideTip(); clearPreset(); }
+    if (moved) { vb = { ...start.vb, x: start.vb.x - dx / r.width * start.vb.w, y: start.vb.y - dy / r.height * start.vb.h }; apply(); }
+  } else if (pts.length === 2 && start.pts.length === 2) {
+    moved = true; hideTip(); clearPreset();
+    const d0 = Math.hypot(start.pts[0].x - start.pts[1].x, start.pts[0].y - start.pts[1].y), d1 = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    const k = d0 / Math.max(1, d1), c0x = (start.pts[0].x + start.pts[1].x) / 2, c0y = (start.pts[0].y + start.pts[1].y) / 2, c1x = (pts[0].x + pts[1].x) / 2, c1y = (pts[0].y + pts[1].y) / 2;
+    const px = start.vb.x + (c0x - r.left) / r.width * start.vb.w, py = start.vb.y + (c0y - r.top) / r.height * start.vb.h;
+    const nw = start.vb.w * k, nh = start.vb.h * k;
+    vb = { x: px - (c1x - r.left) / r.width * nw, y: py - (c1y - r.top) / r.height * nh, w: nw, h: nh }; apply();
+  }
+});
+function endPtr(e) { ptrs.delete(e.pointerId); svg.classList.remove("dragging"); start = { vb: { ...vb }, pts: [...ptrs.values()].map(p => ({ ...p })) }; }
+svg.addEventListener("pointerup", endPtr); svg.addEventListener("pointercancel", endPtr);
+
+/* ---------- labels with collision avoidance ---------- */
+let yearCut = 1992;
+function layoutLabels() {
+  const r = svg.getBoundingClientRect(); if (!r.width) return;
+  const s = vb.w / r.width;  // svg units per px
+  const fs = 11.5 * s;
+  const placed = [];
+  const hit = (b) => placed.some(p => b.x0 < p.x1 && b.x1 > p.x0 && b.y0 < p.y1 && b.y1 > p.y0);
+  // cities first get a reserved slot only when zoomed in enough
+  B.cities.forEach(c => {
+    const sx = (c.x - vb.x) / s, sy = (c.y - vb.y) / s;
+    const show = vb.w < FULL.w * 0.7 && sx > 0 && sy > 0 && sx < r.width && sy < r.height;
+    c.dot.setAttribute("r", 2.4 * s); c.dot.style.display = show ? "" : "none";
+    c.t.setAttribute("x", c.x + 5 * s); c.t.setAttribute("y", c.y - 4 * s); c.t.setAttribute("font-size", 12 * s); c.t.setAttribute("stroke-width", 3 * s);
+    if (show) { const w = c.n.length * 6.6; const b = { x0: sx + 4, y0: sy - 16, x1: sx + 6 + w, y1: sy - 1 }; if (hit(b)) { c.t.style.display = "none"; } else { placed.push(b); c.t.style.display = ""; } }
+    else c.t.style.display = "none";
+  });
+  // reserve the segment midpoints of visible labels, longest first
+  const order = segs.filter(x => x.year <= yearCut).sort((a, b) => b.len - a.len);
+  segs.forEach(x => x.lab.style.display = "none");
+  for (const x of order) {
+    const sx = (x.lx - vb.x) / s, sy = (x.ly - vb.y) / s;
+    if (sx < 14 || sy < 10 || sx > r.width - 14 || sy > r.height - 10) continue;
+    const w = (x.approx ? 5 : 4) * 7.2 + 6, h = 15;
+    const b = { x0: sx - w / 2, y0: sy - h / 2, x1: sx + w / 2, y1: sy + h / 2 };
+    if (hit(b)) continue;
+    placed.push(b);
+    x.lab.setAttribute("x", x.lx); x.lab.setAttribute("y", x.ly + fs * 0.36);
+    x.lab.setAttribute("font-size", fs); x.lab.setAttribute("stroke-width", 3.6 * s); x.lab.style.display = "";
+  }
+}
+new ResizeObserver(() => { vb = fit(vb); apply(); }).observe(frame);
+
+/* ---------- timeline ---------- */
+function setYear(y) {
+  yearCut = y; $("yr").value = y; $("yrout").textContent = y;
+  segs.forEach(s => { const f = s.year > y; s.el.classList.toggle("future", f); s.hit.style.pointerEvents = f ? "none" : ""; });
+  drawChart(); updateStats(); apply();
+}
+$("yr").addEventListener("input", (e) => { stopPlay(); setYear(+e.target.value); });
+let playT = null;
+function stopPlay() { if (playT) { clearInterval(playT); playT = null; $("play").textContent = "▶ Play"; } }
+$("play").onclick = () => {
+  if (playT) return stopPlay();
+  let y = yearCut >= 1992 ? 1941 : yearCut; $("play").textContent = "❚❚ Pause";
+  playT = setInterval(() => { y++; setYear(y); if (y >= 1992) stopPlay(); }, 260);
+};
+
+/* ---------- chart ---------- */
+const byYear = {}; for (let y = 1942; y <= 1992; y++) byYear[y] = 0;
+segs.forEach(s => byYear[s.year] += s.miles);
+const totalMi = segs.reduce((a, s) => a + s.miles, 0);
+function drawChart() {
+  const C = $("chart"); C.innerHTML = "";
+  const W = 900, H = 190, L = 38, R = 8, T = 10, Bm = 26, max = Math.ceil(Math.max(...Object.values(byYear)) / 50) * 50;
+  const bw = (W - L - R) / 51;
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); C.appendChild(e); return e; };
+  for (let v = 0; v <= max; v += 50) { const y = T + (H - T - Bm) * (1 - v / max); el("line", { x1: L, x2: W - R, y1: y, y2: y, class: "grid" }); el("text", { x: L - 6, y: y + 3, "text-anchor": "end" }).textContent = v; }
+  for (let yr = 1942; yr <= 1992; yr++) {
+    const v = byYear[yr], h = (H - T - Bm) * v / max, x = L + (yr - 1942) * bw;
+    const b = el("rect", { x: x + 1, y: H - Bm - h, width: bw - 2, height: Math.max(h, v ? 1 : 0), fill: color(yr), class: "bar", opacity: yr > yearCut ? 0.25 : 1 });
+    const t = document.createElementNS(NS, "title"); t.textContent = `${yr}: ≈${v.toFixed(0)} mi`; b.appendChild(t);
+    b.addEventListener("click", () => { stopPlay(); setYear(yr); });
+    if (yr % 5 === 0) el("text", { x: x + bw / 2, y: H - 8, "text-anchor": "middle" }).textContent = yr;
+  }
+  el("text", { x: L - 6, y: H - Bm + 16, "text-anchor": "end" }).textContent = "mi";
+}
+function updateStats() {
+  const open = segs.filter(s => s.year <= yearCut).reduce((a, s) => a + s.miles, 0);
+  $("stats").innerHTML = `<span>Open by ${yearCut}: <b>≈${open.toFixed(0)} mi</b> (${(open / totalMi * 100).toFixed(0)}%)</span>
+    <span>First: <b>1942</b> Willow Run Expwy</span><span>Last: <b>1992</b> I-69 near Lansing</span><span>Segments: <b>${segs.length}</b></span>`;
+}
+
+/* ---------- register ---------- */
+const ORDER = ["I-69","I-75","I-94","I-96","I-194","I-196","I-275","I-296","I-375","I-475","I-496","I-675","I-696"];
+const tb = $("tbody");
+ORDER.forEach(r => segs.filter(s => s.route === r).forEach(s => {
+  const tr = document.createElement("tr"); tr.className = "rowlink"; tr.tabIndex = 0;
+  tr.innerHTML = `<td class="rt">${s.route}</td><td>${s.frm}</td><td>${s.to}</td><td class="yr"><span class="sw" style="background:${s.color}"></span>${s.approx ? "≈" : ""}${s.year}</td><td>${s.note}</td>`;
+  const go = () => {
+    clearPreset(); const bb = s.el.getBBox(); const pad = Math.max(bb.width, bb.height) * 0.8 + 6;
+    if (yearCut < s.year) setYear(1992);
+    animateTo({ x: bb.x - pad, y: bb.y - pad, w: bb.width + 2 * pad, h: bb.height + 2 * pad });
+    frame.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => { const r = frame.getBoundingClientRect(); showTip(s, { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); }, 520);
+  };
+  tr.addEventListener("click", go); tr.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  tb.appendChild(tr);
+}));
+
+vb = fit(PRESETS.state); setYear(1992);
+</script>
