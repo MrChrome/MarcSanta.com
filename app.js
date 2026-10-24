@@ -1,299 +1,270 @@
-// Build HTML timeline from data
-(function buildTimeline() {
-  var timeline = document.getElementById('timeline');
-  timelineData.forEach(function(d) {
-    var item = document.createElement('div');
-    item.className = 'timeline-item' + (d.fork ? ' timeline-fork' : '');
-    var style = 'flex-grow: ' + d.grow + ';';
-    if (d.last) style += ' align-items: flex-start;';
-    item.setAttribute('style', style);
-
-    var content = document.createElement('div');
-    content.className = 'timeline-content';
-    if (d.last && !d.fork) content.setAttribute('style', 'left: 0; transform: translateX(-50%);');
-
-    if (d.logo) {
-      var img = document.createElement('img');
-      img.className = 'timeline-logo' + (d.logoClass ? ' ' + d.logoClass : '');
-      img.src = d.logo;
-      img.alt = d.name;
-      content.appendChild(img);
-    } else {
-      var label = document.createElement('div');
-      label.className = 'timeline-label';
-      label.textContent = d.name;
-      content.appendChild(label);
-    }
-
-    var years = document.createElement('div');
-    years.className = 'timeline-years';
-    years.textContent = d.years;
-    content.appendChild(years);
-
-    if (d.role) {
-      var sub = document.createElement('div');
-      sub.className = 'timeline-sub';
-      sub.innerHTML = d.role.replace(/\n/g, '<br>');
-      content.appendChild(sub);
-    }
-
-    item.appendChild(content);
-
-    var dot = document.createElement('div');
-    dot.className = 'timeline-dot';
-    item.appendChild(dot);
-
-    if (d.fork) {
-      var forkDepth = d.forkDepth || 70;
-      var forkX = d.forkX || 14;
-      var forkColor = d.forkColor || '#38bdf8';
-      item.dataset.forkDepth = forkDepth;
-      item.dataset.forkX = forkX;
-      item.dataset.forkColor = forkColor;
-      item.dataset.forkName = d.name;
-      item.dataset.forkYears = d.years;
-      item.style.setProperty('--fork-depth', forkDepth);
-      item.style.setProperty('--fork-x', forkX);
-      item.style.setProperty('--fork-color', forkColor);
-
-      var ns = 'http://www.w3.org/2000/svg';
-      var forkSvg = document.createElementNS(ns, 'svg');
-      forkSvg.setAttribute('class', 'timeline-fork-svg');
-      forkSvg.setAttribute('viewBox', '-2 -2 ' + (forkX + 16) + ' ' + (forkDepth + 16));
-      forkSvg.setAttribute('width', forkX + 16);
-      forkSvg.setAttribute('height', forkDepth + 16);
-      forkSvg.setAttribute('fill', 'none');
-      // Diagonal from junction (0,0) down to bend point (forkX, forkDepth)
-      var forkLine = document.createElementNS(ns, 'line');
-      forkLine.setAttribute('x1', '0'); forkLine.setAttribute('y1', '0');
-      forkLine.setAttribute('x2', forkX); forkLine.setAttribute('y2', forkDepth);
-      forkLine.setAttribute('stroke', forkColor);
-      forkLine.setAttribute('stroke-width', '2.5');
-      forkLine.setAttribute('stroke-linecap', 'round');
-      // Dot at bend point
-      var forkDot = document.createElementNS(ns, 'circle');
-      forkDot.setAttribute('cx', forkX); forkDot.setAttribute('cy', forkDepth);
-      forkDot.setAttribute('r', '7');
-      forkDot.setAttribute('fill', forkColor);
-      forkDot.setAttribute('stroke', '#0f172a');
-      forkDot.setAttribute('stroke-width', '3');
-      // Outer glow ring
-      var forkRing = document.createElementNS(ns, 'circle');
-      forkRing.setAttribute('cx', forkX); forkRing.setAttribute('cy', forkDepth);
-      forkRing.setAttribute('r', '10');
-      forkRing.setAttribute('fill', 'none');
-      forkRing.setAttribute('stroke', forkColor);
-      forkRing.setAttribute('stroke-width', '2');
-      forkRing.setAttribute('opacity', '0.6');
-      forkSvg.appendChild(forkLine);
-      forkSvg.appendChild(forkDot);
-      forkSvg.appendChild(forkRing);
-      forkSvg.addEventListener('mouseenter', function() { item.classList.add('fork-hovered'); });
-      forkSvg.addEventListener('mouseleave', function() { item.classList.remove('fork-hovered'); });
-      item.appendChild(forkSvg);
-    }
-
-    var tooltip = document.createElement('div');
-    tooltip.className = 'timeline-tooltip';
-    var tooltipBullets = d.bullets.slice();
-    if (d.birthDate && d.pronoun) {
-      var now = new Date();
-      var birth = new Date(d.birthDate + 'T00:00:00');
-      var years = now.getFullYear() - birth.getFullYear();
-      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
-      var ageStr;
-      if (years < 1) {
-        var months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
-        if (now.getDate() < birth.getDate()) months--;
-        ageStr = months + ' month' + (months === 1 ? '' : 's') + ' old';
-      } else {
-        ageStr = years + ' year' + (years === 1 ? '' : 's') + ' old';
-      }
-      tooltipBullets.push(d.pronoun + ' is ' + ageStr + '.');
-    }
-    tooltip.innerHTML = tooltipBullets.map(function(b) {
-      if (b.charCodeAt(0) === 0x25aa) {
-        return '<span style="display:block;padding-left:1rem;">' + b + '</span>';
-      }
-      return '<span style="display:block;">&bull; ' + b + '</span>';
-    }).join('');
-    item.appendChild(tooltip);
-
-    timeline.appendChild(item);
-  });
-
-  // Chevrons
-  var chevrons = document.createElement('div');
-  chevrons.className = 'timeline-chevrons';
-  chevrons.innerHTML = '<svg width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="#0c4a6e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-    + '<polyline points="2,6 10,12 2,18" opacity="0.4"/>'
-    + '<polyline points="15,6 23,12 15,18" opacity="0.65"/>'
-    + '<polyline points="28,6 36,12 28,18" opacity="1"/>'
-    + '</svg>';
-  timeline.appendChild(chevrons);
-
-  // Touch support
-  if ('ontouchstart' in window) {
-    document.querySelectorAll('.timeline-item').forEach(function(item) {
-      item.addEventListener('click', function() {
-        var tt = this.querySelector('.timeline-tooltip');
-        if (!tt) return;
-        var isOpen = tt.style.display === 'block';
-        document.querySelectorAll('.timeline-tooltip').forEach(function(t) {
-          t.style.display = 'none';
-        });
-        if (!isOpen) tt.style.display = 'block';
-      });
-    });
-  }
-
-  buildForkArms();
+// Proportional vertical timeline: each era's height tracks how long it lasted,
+// so scrolling the page moves through time.
+var NOW = (function() {
+  var d = new Date();
+  return d.getFullYear() + d.getMonth() / 12;
 })();
 
-function buildForkArms() {
-  // Remove any existing arms
-  document.querySelectorAll('.fork-arm, .fork-arm-mobile').forEach(function(el) {
-    if (el.parentNode) el.parentNode.removeChild(el);
+var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function parseRange(d) {
+  if (d.birthDate) {
+    var b = new Date(d.birthDate + 'T00:00:00');
+    return { start: b.getFullYear() + b.getMonth() / 12, end: NOW };
+  }
+  var parts = d.years.split('-').map(function(p) { return p.trim(); });
+  var start = parseInt(parts[0], 10);
+  var end = !parts[1] ? start : /today|present/i.test(parts[1]) ? NOW : parseInt(parts[1], 10);
+  return { start: start, end: end };
+}
+
+function ageOf(birthDate) {
+  var now = new Date();
+  var birth = new Date(birthDate + 'T00:00:00');
+  var years = now.getFullYear() - birth.getFullYear();
+  if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
+  if (years >= 1) return years + ' year' + (years === 1 ? '' : 's') + ' old';
+  var months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  if (now.getDate() < birth.getDate()) months--;
+  return months + ' month' + (months === 1 ? '' : 's') + ' old';
+}
+
+function el(tag, cls, text) {
+  var node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+function bulletList(bullets) {
+  var ul = el('ul', 'era-bullets');
+  bullets.forEach(function(b) {
+    var isSub = b.charCodeAt(0) === 0x25aa;
+    ul.appendChild(el('li', isSub ? 'sub' : null, isSub ? b.slice(1).trim() : b));
+  });
+  return ul;
+}
+
+var eras = timelineData.filter(function(d) { return d.type !== 'personal'; });
+var family = timelineData.filter(function(d) { return d.type === 'personal'; });
+var anchors = [];
+
+// Hero: current role and a few numbers, all derived from the data
+(function buildHero() {
+  var work = eras.filter(function(d) { return d.type === 'experience'; });
+  var current = work[work.length - 1];
+  var currentRole = current.pdfSections ? current.pdfSections[0].role : current.role.split('\n').pop();
+  document.getElementById('lede').textContent = currentRole + ' at ' + current.name + '. ' +
+    'Builds software, and the teams that build it.';
+
+  var degrees = eras.filter(function(d) { return d.type === 'education' && d.role; }).length;
+  var stats = [
+    [Math.floor(NOW - parseRange(work[0]).start), 'years working in tech'],
+    [Math.floor(NOW - parseRange(current).start), 'years at ' + current.name],
+    [degrees, 'computer science degrees'],
+    [family.length, 'kids']
+  ];
+  var dl = document.getElementById('stats');
+  stats.forEach(function(s) {
+    var wrap = el('div', 'stat');
+    wrap.appendChild(el('dt', 'stat-label', s[1]));
+    wrap.appendChild(el('dd', 'stat-num', s[0]));
+    dl.appendChild(wrap);
+  });
+  document.getElementById('scrollCueText').textContent = 'Start in ' + Math.floor(parseRange(eras[0]).start);
+})();
+
+// Career lane
+(function buildCareer() {
+  var career = document.getElementById('career');
+  eras.forEach(function(d) {
+    var r = parseRange(d);
+    var era = el('article', 'era era--' + d.type);
+    era.dataset.start = r.start;
+    era.dataset.end = r.end;
+    era.appendChild(el('div', 'era-bar'));
+
+    var card = el('div', 'era-card');
+    var meta = el('div', 'era-meta');
+    meta.appendChild(el('span', 'era-kind', d.type === 'education' ? 'School' : 'Work'));
+    meta.appendChild(el('span', 'era-years', d.years.replace(' - ', ' — ')));
+    var span = Math.floor(r.end - r.start + 0.01);
+    meta.appendChild(el('span', 'era-dur', span + (span === 1 ? ' yr' : ' yrs')));
+    card.appendChild(meta);
+
+    if (d.logo) {
+      var img = el('img', 'era-logo' + (d.logoClass ? ' ' + d.logoClass : ''));
+      img.src = d.logo;
+      img.alt = '';
+      card.appendChild(img);
+    }
+    card.appendChild(el('h3', 'era-name' + (d.logo ? ' sr-only' : ''), d.name));
+
+    if (d.pdfSections) {
+      // Promotions, oldest first, newest highlighted
+      var steps = el('ol', 'era-steps');
+      d.pdfSections.slice().reverse().forEach(function(s, i, all) {
+        var li = el('li', i === all.length - 1 ? 'is-now' : null);
+        li.appendChild(el('span', 'step-role', s.role));
+        li.appendChild(el('span', 'step-years', s.years.replace('Present', 'Today').replace(' - ', ' — ')));
+        steps.appendChild(li);
+      });
+      card.appendChild(steps);
+    } else if (d.role) {
+      card.appendChild(el('p', 'era-role', d.role));
+    }
+
+    card.appendChild(bulletList(d.bullets));
+    era.appendChild(card);
+    career.appendChild(era);
   });
 
-  var timelineEl = document.getElementById('timeline');
-  var timelineRect = timelineEl.getBoundingClientRect();
-  var isMobile = window.innerWidth <= 768;
+  var end = el('div', 'era-end');
+  var now = new Date();
+  end.appendChild(el('span', 'era-end-dot'));
+  end.appendChild(el('span', null, 'Today · ' + MONTHS[now.getMonth()] + ' ' + now.getFullYear()));
+  career.appendChild(end);
+})();
 
-  document.querySelectorAll('.timeline-item.timeline-fork').forEach(function(item) {
-    var ns = 'http://www.w3.org/2000/svg';
-    var depth = parseInt(item.dataset.forkDepth) || 70;
+// Family lane: each kid is a branch that starts at their birth and runs to today
+(function buildFamily() {
+  var life = document.getElementById('life');
+  family.forEach(function(d, i) {
+    var birth = new Date(d.birthDate + 'T00:00:00');
+    var branch = el('div', 'branch');
+    branch.style.setProperty('--i', i);
+    branch.dataset.start = parseRange(d).start;
+    var label = el('div', 'branch-label');
+    label.appendChild(el('span', 'branch-name', d.name));
+    label.appendChild(el('span', 'branch-date', MONTHS[birth.getMonth()] + ' ' + birth.getFullYear()));
+    label.appendChild(el('span', 'branch-age', ageOf(d.birthDate)));
+    branch.appendChild(label);
+    life.appendChild(branch);
+  });
+})();
 
-    var color = item.dataset.forkColor || '#38bdf8';
-    var cr = parseInt(color.slice(1,3), 16);
-    var cg = parseInt(color.slice(3,5), 16);
-    var cb = parseInt(color.slice(5,7), 16);
-    var colorAlpha = 'rgba(' + cr + ',' + cg + ',' + cb + ',0.6)';
-
-    if (isMobile) {
-      // Mobile: L-shaped branch from main dot going RIGHT then UP
-      var dotEl = item.querySelector('.timeline-dot');
-      var dotRect = dotEl.getBoundingClientRect();
-      // The dot's getBoundingClientRect() includes its translateX(-55%) transform,
-      // which shifts it left of the actual main vertical line. Use the line's true
-      // X instead: the timeline's padding-left (where ::before is positioned).
-      var mainLineX = Math.round(parseFloat(getComputedStyle(timelineEl).paddingLeft));
-      var dotCY = Math.round(dotRect.top  - timelineRect.top  + dotRect.height / 2);
-
-      // Vary RIGHT per item via forkDepth so Peter and Audrey don't overlap
-      var RIGHT = Math.round(depth * 0.5 + 10);
-      var UP = 55;
-
-      var mArm = document.createElement('div');
-      mArm.className = 'fork-arm-mobile';
-      mArm.style.left = mainLineX + 'px';
-      mArm.style.top  = (dotCY - UP) + 'px';
-
-      // L-shape SVG: (0,UP) → right to (RIGHT,UP) → up to (RIGHT,0)
-      var svg = document.createElementNS(ns, 'svg');
-      svg.setAttribute('width',   RIGHT + 20);
-      svg.setAttribute('height',  UP + 20);
-      svg.setAttribute('viewBox', '-5 -10 ' + (RIGHT + 20) + ' ' + (UP + 20));
-      svg.setAttribute('fill', 'none');
-      svg.setAttribute('overflow', 'visible');
-
-      var lp = document.createElementNS(ns, 'path');
-      lp.setAttribute('d', 'M 0,' + UP + ' H ' + RIGHT + ' V 0');
-      lp.setAttribute('stroke', color);
-      lp.setAttribute('stroke-width', '2.5');
-      lp.setAttribute('stroke-linecap', 'round');
-      lp.setAttribute('stroke-linejoin', 'round');
-      lp.setAttribute('fill', 'none');
-
-      var eDot = document.createElementNS(ns, 'circle');
-      eDot.setAttribute('cx', RIGHT); eDot.setAttribute('cy', '0');
-      eDot.setAttribute('r', '7');
-      eDot.setAttribute('fill', color);
-      eDot.setAttribute('stroke', '#0f172a');
-      eDot.setAttribute('stroke-width', '3');
-
-      var eRing = document.createElementNS(ns, 'circle');
-      eRing.setAttribute('cx', RIGHT); eRing.setAttribute('cy', '0');
-      eRing.setAttribute('r', '10');
-      eRing.setAttribute('fill', 'none');
-      eRing.setAttribute('stroke', color);
-      eRing.setAttribute('stroke-width', '2');
-      eRing.setAttribute('opacity', '0.6');
-
-      svg.appendChild(lp);
-      svg.appendChild(eDot);
-      svg.appendChild(eRing);
-      mArm.appendChild(svg);
-
-      // Label at the top of the branch (top-right of arm)
-      var lbl = document.createElement('div');
-      lbl.className = 'fork-arm-mobile-label';
-      lbl.style.left = (RIGHT + 18) + 'px';
-
-      var nameEl = document.createElement('div');
-      nameEl.className = 'timeline-label';
-      nameEl.textContent = item.dataset.forkName || '';
-
-      var yearsEl = document.createElement('div');
-      yearsEl.className = 'timeline-years';
-      yearsEl.textContent = item.dataset.forkYears || '';
-
-      lbl.appendChild(nameEl);
-      lbl.appendChild(yearsEl);
-      mArm.appendChild(lbl);
-
-      mArm.addEventListener('mouseenter', function() { item.classList.add('fork-hovered'); });
-      mArm.addEventListener('mouseleave', function() { item.classList.remove('fork-hovered'); });
-      if ('ontouchstart' in window) {
-        mArm.addEventListener('click', function() {
-          var tt = item.querySelector('.timeline-tooltip');
-          if (!tt) return;
-          var isOpen = tt.style.display === 'block';
-          document.querySelectorAll('.timeline-tooltip').forEach(function(t) { t.style.display = 'none'; });
-          if (!isOpen) tt.style.display = 'block';
-        });
-      }
-      timelineEl.appendChild(mArm);
-
-    } else {
-      // Desktop: horizontal arm extending to the right edge with chevrons
-      var itemRect = item.getBoundingClientRect();
-      var fx = parseInt(item.dataset.forkX) || 14;
-      var armLeft = Math.round(itemRect.left - timelineRect.left + itemRect.width / 2 + fx);
-      var armTop  = Math.round(itemRect.top  - timelineRect.top  + itemRect.height / 2 + depth - 12);
-
-      var arm = document.createElement('div');
-      arm.className = 'fork-arm';
-      arm.style.left = armLeft + 'px';
-      arm.style.top  = armTop  + 'px';
-      arm.style.setProperty('--fork-color', color);
-      arm.style.setProperty('--fork-color-alpha', colorAlpha);
-
-      var chevSvg = document.createElementNS(ns, 'svg');
-      chevSvg.setAttribute('class', 'fork-arm-chevrons');
-      chevSvg.setAttribute('width', '40');
-      chevSvg.setAttribute('height', '24');
-      chevSvg.setAttribute('viewBox', '0 0 40 24');
-      chevSvg.setAttribute('fill', 'none');
-      chevSvg.setAttribute('stroke', color);
-      chevSvg.setAttribute('stroke-width', '1.8');
-      chevSvg.setAttribute('stroke-linecap', 'round');
-      chevSvg.setAttribute('stroke-linejoin', 'round');
-      [['2,6 10,12 2,18', '0.4'], ['15,6 23,12 15,18', '0.65'], ['28,6 36,12 28,18', '1']].forEach(function(p) {
-        var poly = document.createElementNS(ns, 'polyline');
-        poly.setAttribute('points', p[0]);
-        poly.setAttribute('opacity', p[1]);
-        chevSvg.appendChild(poly);
-      });
-      arm.appendChild(chevSvg);
-      arm.addEventListener('mouseenter', function() { item.classList.add('fork-hovered'); });
-      arm.addEventListener('mouseleave', function() { item.classList.remove('fork-hovered'); });
-      timelineEl.appendChild(arm);
+function yOf(year) {
+  for (var i = 0; i < anchors.length - 1; i++) {
+    var a = anchors[i], b = anchors[i + 1];
+    if (b[0] > a[0] && year >= a[0] && year <= b[0]) {
+      return a[1] + (year - a[0]) / (b[0] - a[0]) * (b[1] - a[1]);
     }
+  }
+  return year <= anchors[0][0] ? anchors[0][1] : anchors[anchors.length - 1][1];
+}
+
+function yearAt(y) {
+  for (var i = 0; i < anchors.length - 1; i++) {
+    var a = anchors[i], b = anchors[i + 1];
+    if (b[1] > a[1] && y >= a[1] && y <= b[1]) {
+      return a[0] + (y - a[1]) / (b[1] - a[1]) * (b[0] - a[0]);
+    }
+  }
+  return y <= anchors[0][1] ? anchors[0][0] : anchors[anchors.length - 1][0];
+}
+
+function layoutTimeline() {
+  var yearPx = window.innerWidth <= 768 ? 100 : 130;
+  var eraEls = document.querySelectorAll('.era');
+
+  // Eras get a height proportional to their length but may grow to fit their
+  // card, so the year scale is piecewise: interpolate between era edges.
+  anchors = [];
+  eraEls.forEach(function(era) {
+    var start = parseFloat(era.dataset.start), end = parseFloat(era.dataset.end);
+    era.style.minHeight = Math.round((end - start) * yearPx) + 'px';
+  });
+  eraEls.forEach(function(era) {
+    anchors.push([parseFloat(era.dataset.start), era.offsetTop]);
+    anchors.push([parseFloat(era.dataset.end), era.offsetTop + era.offsetHeight]);
+
+    // Notches on the bar where promotions happened
+    era.querySelectorAll('.era-notch').forEach(function(n) { n.remove(); });
+  });
+  eras.forEach(function(d, i) {
+    if (!d.pdfSections) return;
+    var era = eraEls[i];
+    d.pdfSections.slice(0, -1).forEach(function(s) {
+      var notch = el('span', 'era-notch');
+      notch.style.top = (yOf(parseInt(s.years, 10)) - era.offsetTop) + 'px';
+      era.querySelector('.era-bar').appendChild(notch);
+    });
+  });
+
+  var ruler = document.getElementById('ruler');
+  ruler.querySelectorAll('.tick').forEach(function(t) { t.remove(); });
+  var first = Math.ceil(anchors[0][0]);
+  for (var y = first; y <= Math.floor(NOW); y++) {
+    var tick = el('div', 'tick' + (y % 5 === 0 ? ' tick-major' : ''));
+    tick.dataset.year = y;
+    tick.style.top = yOf(y) + 'px';
+    tick.appendChild(el('span', 'tick-label', y));
+    ruler.appendChild(tick);
+  }
+
+  document.querySelectorAll('.branch').forEach(function(branch) {
+    var top = yOf(parseFloat(branch.dataset.start));
+    branch.style.top = top + 'px';
+    branch.style.height = (anchors[anchors.length - 1][1] - top) + 'px';
+  });
+
+  onTimelineScroll();
+}
+
+var lastYear = null;
+function onTimelineScroll() {
+  if (!anchors.length) return;
+  var career = document.getElementById('career');
+  var rect = career.getBoundingClientRect();
+  var vh = window.innerHeight;
+  var probe = vh * 0.45 - rect.top;
+  var total = anchors[anchors.length - 1][1];
+  var active = rect.top < vh * 0.55 && rect.bottom > vh * 0.35;
+
+  document.body.classList.toggle('past-hero', window.scrollY > vh * 0.6);
+  document.getElementById('rulerFill').style.height = Math.max(0, Math.min(total, probe)) + 'px';
+
+  var counter = document.getElementById('yearCounter');
+  counter.classList.toggle('visible', active);
+  var year = Math.floor(yearAt(Math.max(0, Math.min(total, probe))));
+  if (year === lastYear) return;
+  lastYear = year;
+  counter.textContent = year;
+
+  document.querySelectorAll('.tick').forEach(function(t) {
+    t.classList.toggle('is-active', +t.dataset.year === year);
+    t.classList.toggle('is-past', +t.dataset.year < year);
+  });
+  document.querySelectorAll('.era').forEach(function(era) {
+    era.classList.toggle('is-current', year >= +era.dataset.start && year < +era.dataset.end);
   });
 }
 
-window.addEventListener('resize', buildForkArms);
+(function wireTimeline() {
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() { ticking = false; onTimelineScroll(); });
+  }, { passive: true });
+  window.addEventListener('resize', layoutTimeline);
+  window.addEventListener('load', layoutTimeline);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutTimeline);
+  layoutTimeline();
+
+  var cards = document.querySelectorAll('.era-card, .branch-label');
+  if (!('IntersectionObserver' in window)) {
+    cards.forEach(function(c) { c.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -10% 0px' });
+  cards.forEach(function(c) { io.observe(c); });
+})();
+
 
 function toggleResumeDropdown() {
   document.getElementById('resumeDropdown').classList.toggle('open');
