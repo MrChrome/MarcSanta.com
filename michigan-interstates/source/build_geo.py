@@ -93,6 +93,54 @@ for i, s in enumerate(S):
     out.append(dict(id=i, route=s["route"], frm=s["frm"], to=s["to"], year=s["year"], note=s["note"],
                     approx=s["approx"], d=d, mx=round(mid[0], 1), my=round(mid[1], 1), len=round(L, 1)))
 
+# ---------- close junction gaps ----------
+# Natural Earth lines often stop short of the Interstate they meet. Where a segment end is
+# labeled with another route ("I-75, S Flint"), extend it to the nearest point on that route.
+def snap_junctions(out, lo=0.3, hi=6.0):
+    import re
+    def pts(d): return [tuple(map(float, p)) for p in re.findall(r"(-?[\d.]+),(-?[\d.]+)", d)]
+    def foot(p, a, b):
+        dx, dy = b[0] - a[0], b[1] - a[1]; L = dx * dx + dy * dy
+        t = 0 if L == 0 else max(0, min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L))
+        q = (a[0] + t * dx, a[1] + t * dy)
+        return math.dist(p, q), q
+    P = {s["id"]: pts(s["d"]) for s in out}
+    for s in out:
+        xy = list(P[s["id"]])
+        for at, lab in ((0, s["frm"]), (-1, s["to"])):
+            m = re.match(r"(I-\d+)", lab)
+            if not m or m.group(1) == s["route"]:
+                continue
+            cands = [foot(xy[at], a, b) for t in out if t["route"] == m.group(1) for a, b in zip(P[t["id"]], P[t["id"]][1:])]
+            if not cands:
+                continue
+            gap, q = min(cands)
+            if gap <= lo:
+                continue
+            # if the line already crosses that route near this end, trim back to the crossing instead
+            order = range(len(xy)) if at == 0 else range(len(xy) - 1, -1, -1)
+            run, prev, cut = 0.0, None, None
+            for k in order:
+                if prev is not None:
+                    run += math.dist(xy[k], xy[prev])
+                if run > hi:
+                    break
+                if min(foot(xy[k], a, b)[0] for t in out if t["route"] == m.group(1) for a, b in zip(P[t["id"]], P[t["id"]][1:])) <= lo:
+                    cut = k
+                    break
+                prev = k
+            if cut is not None and 0 < (cut if at == 0 else len(xy) - 1 - cut) < len(xy) - 1:
+                s["len"] = round(s["len"] - run, 1)
+                xy = xy[cut:] if at == 0 else xy[:cut + 1]
+            elif gap < hi:
+                q = (round(q[0], 1), round(q[1], 1))
+                xy = [q] + xy if at == 0 else xy + [q]
+                s["len"] = round(s["len"] + gap, 1)
+        s["d"] = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in xy)
+    return out
+
+snap_junctions(out)
+
 # ---------- base map: states, lakes ----------
 states = json.load(open(f"{DL}/states.geojson"))
 lakes = json.load(open(f"{DL}/lakes.geojson"))
