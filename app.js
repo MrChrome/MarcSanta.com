@@ -70,7 +70,7 @@ var anchors = [];
   var work = eras.filter(function(d) { return d.type === 'experience'; });
   var current = work[work.length - 1];
   var currentRole = current.pdfSections ? current.pdfSections[0].role : current.role.split('\n').pop();
-  document.getElementById('lede').textContent = currentRole + ' at ' + current.name + '. ' +
+  document.getElementById('lede').textContent = currentRole + '. ' +
     'Builds software, and the teams that build it.';
 
   var degrees = eras.filter(function(d) { return d.type === 'education' && d.role; }).length;
