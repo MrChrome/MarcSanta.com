@@ -23,6 +23,10 @@
   .get .dl { text-decoration: none; }
   .get .meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); }
   .get .meta a { color: inherit; }
+  .shots { margin-top: 4rem; display: grid; gap: 1rem; }
+  .shots-row { display: grid; grid-template-columns: 2.36fr 1fr; gap: 1rem; align-items: start; }
+  .shots img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+  .shots figcaption { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 0.6rem; }
   .app section { margin-top: 5rem; border-top: 1px solid var(--line); padding-top: 2.5rem; }
   .app h2 { font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.05; margin-bottom: 1.75rem; }
   .app section > p { color: var(--ink-2); max-width: 64ch; }
@@ -46,6 +50,9 @@
     .app-head img { width: 72px; height: 72px; border-radius: 16px; }
     .app .intro { font-size: 1.0625rem; }
     .features { grid-template-columns: minmax(0, 1fr); }
+    .shots { margin-top: 3rem; }
+    .shots-row { grid-template-columns: minmax(0, 1fr); }
+    .shots-row figure:last-child { max-width: 300px; }
     .app section { margin-top: 3.5rem; }
   }
 </style>
@@ -73,6 +80,23 @@
   <div class="get">
     <a class="dl dl-primary" href="BLE-Thermo-1.1.zip" download>Download 1.1</a>
     <span class="meta">4.3 MB · macOS 26.2+ · Apple Silicon · <a href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener">source</a></span>
+  </div>
+
+  <div class="shots">
+    <figure>
+      <img src="screenshot-charts.jpg" width="1720" height="1156" alt="Web dashboard showing a day of temperature and humidity for nine sensors, with current readings and trend arrows on the right">
+      <figcaption>The web dashboard: a day of readings from around the house.</figcaption>
+    </figure>
+    <div class="shots-row">
+      <figure>
+        <img src="screenshot-floorplan.jpg" width="1720" height="1021" loading="lazy" alt="Floor plan view with live temperature pins placed in each room">
+        <figcaption>Optional floor plan with live readings pinned to rooms.</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshot-phone.jpg" width="780" height="1093" loading="lazy" alt="The dashboard on a phone">
+        <figcaption>Works on a phone, too.</figcaption>
+      </figure>
+    </div>
   </div>
 
   <section>
