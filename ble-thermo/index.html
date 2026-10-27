@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLE Thermo · Marc Santa</title>
+<meta name="description" content="A small macOS menu-bar app that reads Govee Bluetooth thermometers, logs the history, and can share them with HomeKit.">
+<link rel="icon" href="../favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  .app { max-width: 860px; margin: 0 auto; padding: calc(var(--topbar) + 6rem) var(--gutter) 3rem; }
+  .app-head { display: flex; align-items: center; gap: 1.75rem; margin: 1.25rem 0 2rem; }
+  .app-head img { width: 104px; height: 104px; border-radius: 22px; flex: none; }
+  .app h1 { font-size: clamp(3.25rem, 9vw, 6.5rem); line-height: 0.95; margin-left: -0.04em; }
+  .app .intro { font-size: 1.1875rem; color: var(--ink-2); max-width: 60ch; }
+  .app .intro + .intro { margin-top: 1rem; }
+  .get { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; margin: 2.5rem 0 0; }
+  .get .dl { text-decoration: none; }
+  .get .meta { font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); }
+  .get .meta a { color: inherit; }
+  .app section { margin-top: 5rem; border-top: 1px solid var(--line); padding-top: 2.5rem; }
+  .app h2 { font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.05; margin-bottom: 1.75rem; }
+  .app section > p { color: var(--ink-2); max-width: 64ch; }
+  .app section > p + p { margin-top: 1rem; }
+  .features { list-style: none; display: grid; gap: 1.75rem 2.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .features b { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+  .features span { color: var(--ink-2); font-size: 0.9375rem; }
+  .steps { list-style: none; counter-reset: step; }
+  .steps li { counter-increment: step; display: grid; grid-template-columns: 3rem minmax(0, 1fr); padding: 1rem 0; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+  .steps li:last-child { border-bottom: 0; }
+  .steps li::before { content: counter(step, decimal-leading-zero); font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); padding-top: 0.2rem; }
+  .app code { font-family: var(--mono); font-size: 0.85em; background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 0.1em 0.4em; overflow-wrap: anywhere; }
+  .app a:not(.dl) { color: var(--work); }
+  .changes dt { font-family: var(--mono); font-size: 0.875rem; color: var(--ink); margin-top: 1.5rem; }
+  .changes dt:first-child { margin-top: 0; }
+  .changes dd { color: var(--ink-2); margin-top: 0.4rem; max-width: 64ch; }
+  .app .foot { margin-top: 6rem; }
+  @media (max-width: 768px) {
+    .app { padding-top: calc(var(--topbar) + 3.5rem); }
+    .app-head { gap: 1.25rem; }
+    .app-head img { width: 72px; height: 72px; border-radius: 16px; }
+    .app .intro { font-size: 1.0625rem; }
+    .features { grid-template-columns: minmax(0, 1fr); }
+    .app section { margin-top: 3.5rem; }
+  }
+</style>
+</head>
+<body class="past-hero">
+<header class="topbar">
+  <a class="topbar-name" href="../">Marc Santa</a>
+  <nav class="topbar-nav">
+    <a class="nav-link" href="../other/">Other stuff</a>
+    <a class="nav-link nav-icon" href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener" aria-label="BLE Thermo on GitHub">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+      </svg>
+    </a>
+  </nav>
+</header>
+<main class="app">
+  <p class="eyebrow"><span class="eyebrow-dot"></span>macOS menu-bar app</p>
+  <div class="app-head">
+    <img src="icon.png" alt="">
+    <h1>BLE <em>Thermo</em></h1>
+  </div>
+  <p class="intro">I have a handful of cheap Govee Bluetooth thermometers scattered around the house: the attic, the basement, the garage, a couple of bedrooms. I wanted to see them all in one place and keep a history, without an account or a cloud service. So I wrote this little menu-bar app for the Mac that sits near them.</p>
+  <p class="intro">It works well for me. If you have a similar setup, you're welcome to it.</p>
+  <div class="get">
+    <a class="dl dl-primary" href="BLE-Thermo-1.1.zip" download>Download 1.1</a>
+    <span class="meta">4.3 MB · macOS 26.2+ · Apple Silicon · <a href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener">source</a></span>
+  </div>
+
+  <section>
+    <h2>What it <em>does</em></h2>
+    <ul class="features">
+      <li><b>Reads Govee sensors passively</b><span>Listens for the temperature, humidity and battery level that Govee thermo-hygrometers (H5075 and similar) broadcast over Bluetooth. No pairing, no Govee app, no account.</span></li>
+      <li><b>Lives in the menu bar</b><span>Click the icon for a panel of current readings, hottest first. Rename sensors to something sensible like &ldquo;Attic&rdquo;.</span></li>
+      <li><b>Keeps a history</b><span>Logs every sensor once a minute to a local SQLite file, and can pull older history off a sensor's own memory.</span></li>
+      <li><b>Serves a web dashboard</b><span>Open the Mac's address in any browser on your network for charts by hour, day, month or year, dew point, trend arrows, low-battery warnings, outside weather for comparison, and an optional floor plan with sensor pins.</span></li>
+      <li><b>Bridges to HomeKit</b><span>Pick which sensors to expose and they show up in the Home app as thermometers with humidity and battery, so you can use them in automations.</span></li>
+      <li><b>A few extras</b><span>Optional Mysa thermostat and HomePod readings, control of the cheap &ldquo;ELK-BLEDOM&rdquo; LED strips, and Roku TVs in HomeKit. These grew out of my own house; ignore them if they don't apply.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Getting it <em>running</em></h2>
+    <ol class="steps">
+      <li><span>Download the zip, unzip it, and drag <b>BLE Thermo</b> into Applications.</span></li>
+      <li><span>Open it. The app isn't notarized by Apple, so the first launch will be blocked. Go to <b>System Settings &rarr; Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b>. (Or run <code>xattr -dr com.apple.quarantine "/Applications/BLE Thermo.app"</code> in Terminal.)</span></li>
+      <li><span>Allow Bluetooth access when asked. Sensors in range should appear within a minute or so.</span></li>
+      <li><span>For HomeKit, open Settings from the menu-bar icon for the setup code, then add it in the Home app as a bridge.</span></li>
+      <li><span>The web dashboard runs on port 80. Visit <code>http://&lt;your-mac's-name&gt;.local</code> from another device on the same network.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Fine <em>print</em></h2>
+    <p>This is a hobby project made for my own house, offered as-is. It's been reliable for me, but it hasn't been tested on many other setups and there's no warranty or support beyond whatever I get around to. Everything stays on your Mac; the only things it reaches out to the internet for are optional: outside weather (Open-Meteo), your rough location for that weather, and Mysa if you sign in.</p>
+    <p>The source is on <a href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener">GitHub</a> if you'd rather build it yourself or see how it works. Bug reports and pull requests are welcome there.</p>
+  </section>
+
+  <section>
+    <h2>Version <em>history</em></h2>
+    <dl class="changes">
+      <dt>1.1 · October 2026</dt>
+      <dd>Reworked web dashboard, per-sensor trend arrows, low-battery warnings, outside temperature, humidity and dew point, and an &ldquo;Open at Login&rdquo; option.</dd>
+      <dt>1.0</dt>
+      <dd>First version: menu-bar readings, history logging, web dashboard with dew point, and the HomeKit bridge.</dd>
+    </dl>
+  </section>
+
+  <footer class="foot">
+    <a href="../other/">Other stuff</a>
+    <a href="../">Back to the timeline</a>
+    <a href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+</main>
+</body>
+</html>
