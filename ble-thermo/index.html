@@ -26,6 +26,14 @@
   .shots { margin-top: 4rem; display: grid; gap: 1rem; }
   .shots-row { display: grid; grid-template-columns: 2.36fr 1fr; gap: 1rem; align-items: start; }
   .shots img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+  .shots a { display: block; cursor: zoom-in; }
+  .shots a img { transition: border-color 0.2s; }
+  .shots a:hover img { border-color: var(--muted); }
+  .lightbox { position: fixed; inset: 0; z-index: 1100; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(6, 12, 16, 0.92); cursor: zoom-out; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; width: auto; height: auto; border-radius: 10px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6); }
+  .lightbox button { position: absolute; top: 16px; right: 16px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: var(--ink); font-size: 1.5rem; line-height: 1; cursor: pointer; }
+  .lightbox button:hover { background: rgba(255, 255, 255, 0.2); }
   .shots figcaption { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 0.6rem; }
   .app section { margin-top: 5rem; border-top: 1px solid var(--line); padding-top: 2.5rem; }
   .app h2 { font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.05; margin-bottom: 1.75rem; }
@@ -84,16 +92,16 @@
 
   <div class="shots">
     <figure>
-      <img src="screenshot-charts.jpg" width="1720" height="1156" alt="Web dashboard showing a day of temperature and humidity for nine sensors, with current readings and trend arrows on the right">
+      <a href="screenshot-charts.jpg"><img src="screenshot-charts.jpg" width="1720" height="1156" alt="Web dashboard showing a day of temperature and humidity for nine sensors, with current readings and trend arrows on the right"></a>
       <figcaption>The web dashboard: a day of readings from around the house.</figcaption>
     </figure>
     <div class="shots-row">
       <figure>
-        <img src="screenshot-floorplan.jpg" width="1720" height="1021" loading="lazy" alt="Floor plan view with live temperature pins placed in each room">
+        <a href="screenshot-floorplan.jpg"><img src="screenshot-floorplan.jpg" width="1720" height="1021" loading="lazy" alt="Floor plan view with live temperature pins placed in each room"></a>
         <figcaption>Optional floor plan with live readings pinned to rooms.</figcaption>
       </figure>
       <figure>
-        <img src="screenshot-phone.jpg" width="780" height="1093" loading="lazy" alt="The dashboard on a phone">
+        <a href="screenshot-phone.jpg"><img src="screenshot-phone.jpg" width="780" height="1093" loading="lazy" alt="The dashboard on a phone"></a>
         <figcaption>Works on a phone, too.</figcaption>
       </figure>
     </div>
@@ -123,12 +131,6 @@
   </section>
 
   <section>
-    <h2>Fine <em>print</em></h2>
-    <p>This is a hobby project made for my own house, offered as-is. It's been reliable for me, but it hasn't been tested on many other setups and there's no warranty or support beyond whatever I get around to. Everything stays on your Mac; the only things it reaches out to the internet for are optional: outside weather (Open-Meteo), your rough location for that weather, and Mysa if you sign in.</p>
-    <p>The source is on <a href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener">GitHub</a> if you'd rather build it yourself or see how it works. Bug reports and pull requests are welcome there.</p>
-  </section>
-
-  <section>
     <h2>Version <em>history</em></h2>
     <dl class="changes">
       <dt>1.1 · October 2026</dt>
@@ -138,11 +140,39 @@
     </dl>
   </section>
 
+  <section>
+    <h2>Fine <em>print</em></h2>
+    <p>This is a hobby project made for my own house, offered as-is. It's been reliable for me, but it hasn't been tested on many other setups and there's no warranty or support beyond whatever I get around to. Everything stays on your Mac; the only things it reaches out to the internet for are optional: outside weather (Open-Meteo), your rough location for that weather, and Mysa if you sign in.</p>
+    <p>The source is on <a href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener">GitHub</a> if you'd rather build it yourself or see how it works. Bug reports and pull requests are welcome there.</p>
+  </section>
+
   <footer class="foot">
     <a href="../other/">Other stuff</a>
     <a href="../">Back to the timeline</a>
     <a href="https://github.com/MrChrome/BLE-Thermo" target="_blank" rel="noopener">GitHub</a>
   </footer>
 </main>
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot">
+  <img alt="">
+  <button type="button" aria-label="Close">&times;</button>
+</div>
+<script>
+(function() {
+  var box = document.getElementById('lightbox');
+  var img = box.querySelector('img');
+  function close() { box.classList.remove('open'); img.removeAttribute('src'); }
+  document.querySelectorAll('.shots a').forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      e.preventDefault();
+      img.src = a.getAttribute('href');
+      img.alt = a.querySelector('img').alt;
+      box.classList.add('open');
+      box.querySelector('button').focus();
+    });
+  });
+  box.addEventListener('click', close);
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
+})();
+</script>
 </body>
 </html>
